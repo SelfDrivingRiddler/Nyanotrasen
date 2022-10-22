@@ -1,104 +1,16 @@
 - type: entity
-  name: energy crossbow bolt
-  id: BoltEnergyCrossbow
-  parent: BulletBase
-  noSpawn: true
-  components:
-  - type: Sprite
-    sprite: Nyanotrasen/Objects/Weapons/Guns/Projectiles/plasma.rsi
-    state: base
-  - type: Physics
-  - type: Fixtures
-    fixtures:
-    - shape:
-        !type:PhysShapeAabb
-          bounds: "-0.2,-0.2,0.2,0.2"
-      hard: false
-      mask:
-      - Impassable
-      layer:
-      - MidImpassable
-  - type: Ammo
-    isProjectile: true
-    ammoVelocity: 20
-    caliber: Energy
-  - type: Projectile
-    damage:
-      types:
-        Poison: 15
-  - type: StunOnCollide
-    stunAmount: 2
-    knockdownAmount: 2
-
-- type: entity
   name: decloner bolt
   id: BoltDecloner
-  parent: BulletBase
+  parent: BaseBullet
   noSpawn: true
   components:
   - type: Sprite
     sprite: Nyanotrasen/Objects/Weapons/Guns/Projectiles/plasma.rsi
     color: skyblue
-    state: base
+    state: bullet
   - type: Physics
-  - type: Fixtures
-    fixtures:
-    - shape:
-        !type:PhysShapeAabb
-          bounds: "-0.2,-0.2,0.2,0.2"
-      hard: false
-      mask:
-      - Impassable
-      layer:
-      - MidImpassable
   - type: Ammo
-    isProjectile: true
-    ammoVelocity: 20
-    caliber: Energy
   - type: Projectile
     damage:
       types:
         Cellular: 15
-
-
-- type: entity
-  name: shrink ray bolt
-  id: BoltShrinkRay
-  parent: BulletBase
-  noSpawn: true
-  components:
-  - type: Sprite
-    sprite: Nyanotrasen/Objects/Weapons/Guns/Projectiles/plasma.rsi
-    color: skyblue
-    state: base
-  - type: Physics
-  - type: Fixtures
-    fixtures:
-    - shape:
-        !type:PhysShapeAabb
-          bounds: "-0.2,-0.2,0.2,0.2"
-      hard: false
-      mask:
-      - Impassable
-      layer:
-      - MidImpassable
-  - type: Ammo
-    isProjectile: true
-    ammoVelocity: 20
-    caliber: Energy
-  - type: Projectile
-    damage:
-      types:
-        Poison: 1
-  - type: ShrinkRayProjectile
-
-- type: entity
-  parent: BoltShrinkRay
-  name: growth ray bolt
-  id: BoltGrowthRay
-  noSpawn: true
-  components:
-  - type: ShrinkRayProjectile
-    scaleFactor: "1.5, 1.5"
-    applyItem: false
-

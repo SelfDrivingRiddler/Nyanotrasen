@@ -17,6 +17,7 @@ namespace Content.Shared.SubFloor
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly TrayScannerSystem _trayScannerSystem = default!;
         [Dependency] private readonly SharedAmbientSoundSystem _ambientSoundSystem = default!;
+        [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
 
         public override void Initialize()
         {
@@ -79,7 +80,7 @@ namespace Content.Shared.SubFloor
             if (args.NewTile.Tile.IsEmpty)
                 return; // Anything that was here will be unanchored anyways.
 
-            UpdateTile(MapManager.GetGrid(args.NewTile.GridIndex), args.NewTile.GridIndices);
+            UpdateTile(MapManager.GetGrid(args.NewTile.GridUid), args.NewTile.GridIndices);
         }
 
         private void OnGridChanged(GridModifiedEvent args)
@@ -98,7 +99,7 @@ namespace Content.Shared.SubFloor
             if (!Resolve(uid, ref component, ref xform))
                 return;
 
-            if (xform.Anchored && MapManager.TryGetGrid(xform.GridID, out var grid))
+            if (xform.Anchored && MapManager.TryGetGrid(xform.GridUid, out var grid))
                 component.IsUnderCover = HasFloorCover(grid, grid.TileIndicesFor(xform.Coordinates));
             else
                 component.IsUnderCover = false;
@@ -166,15 +167,19 @@ namespace Content.Shared.SubFloor
             SubFloorHideComponent? hideComp = null,
             AppearanceComponent? appearance = null)
         {
-            if (!Resolve(uid, ref hideComp, ref appearance, false))
+            if (!Resolve(uid, ref hideComp, false))
                 return;
 
-            appearance.SetData(SubFloorVisuals.Covered, hideComp.IsUnderCover);
-            appearance.SetData(SubFloorVisuals.ScannerRevealed, hideComp.RevealedBy.Count != 0);
             if (hideComp.BlockAmbience && hideComp.IsUnderCover)
                 _ambientSoundSystem.SetAmbience(uid, false);
             else if (hideComp.BlockAmbience && !hideComp.IsUnderCover)
                 _ambientSoundSystem.SetAmbience(uid, true);
+
+            if (Resolve(uid, ref appearance, false))
+            {
+                Appearance.SetData(uid, SubFloorVisuals.Covered, hideComp.IsUnderCover, appearance);
+                Appearance.SetData(uid, SubFloorVisuals.ScannerRevealed, hideComp.RevealedBy.Count != 0, appearance);
+            }
         }
     }
 
@@ -183,5 +188,10 @@ namespace Content.Shared.SubFloor
     {
         Covered, // is there a floor tile over this entity
         ScannerRevealed, // is this entity revealed by a scanner or some other entity?
+    }
+
+    public enum SubfloorLayers : byte
+    {
+        FirstLayer
     }
 }

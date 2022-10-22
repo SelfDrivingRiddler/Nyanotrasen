@@ -2,7 +2,6 @@ using System.Threading;
 using Content.Server.Power.Components;
 // using Content.Server.WireHacking;
 using Content.Shared.Doors.Components;
-using Content.Shared.Sound;
 using Robust.Shared.Audio;
 using Robust.Shared.Player;
 // using static Content.Shared.Wires.SharedWiresComponent;
@@ -38,10 +37,25 @@ namespace Content.Server.Doors.Components
         public float PowerWiresTimeout = 5.0f;
 
         /// <summary>
+        /// Pry modifier for a powered airlock.
+        /// Most anything that can pry powered has a pry speed bonus,
+        /// so this default is closer to 6 effectively on e.g. jaws (9 seconds when applied to other default.)
+        /// </summary>
+        [DataField("poweredPryModifier")]
+        public readonly float PoweredPryModifier = 9f;
+
+        /// <summary>
         /// Whether the maintenance panel should be visible even if the airlock is opened.
         /// </summary>
         [DataField("openPanelVisible")]
         public bool OpenPanelVisible = false;
+
+        /// <summary>
+        /// Whether the airlock should stay open if the airlock was clicked.
+        /// If the airlock was bumped into it will still auto close.
+        /// </summary>
+        [DataField("keepOpenIfClicked")]
+        public bool KeepOpenIfClicked = false;
 
         private CancellationTokenSource _powerWiresPulsedTimerCancel = new();
         private bool _powerWiresPulsed;
@@ -99,6 +113,18 @@ namespace Content.Server.Doors.Components
         }
 
         /// <summary>
+        /// True if the bolt wire is cut, which will force the airlock to always be bolted as long as it has power.
+        /// </summary>
+        [ViewVariables]
+        public bool BoltWireCut;
+
+        /// <summary>
+        /// Whether the airlock should auto close. This value is reset every time the airlock closes.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool AutoClose = true;
+
+        /// <summary>
         /// Delay until an open door automatically closes.
         /// </summary>
         [DataField("autoCloseDelay")]
@@ -154,7 +180,7 @@ namespace Content.Server.Doors.Components
 
             BoltsDown = newBolts;
 
-            SoundSystem.Play(Filter.Broadcast(), newBolts ? BoltDownSound.GetSound() : BoltUpSound.GetSound(), Owner);
+            SoundSystem.Play(newBolts ? BoltDownSound.GetSound() : BoltUpSound.GetSound(), Filter.Pvs(Owner), Owner);
         }
     }
 }

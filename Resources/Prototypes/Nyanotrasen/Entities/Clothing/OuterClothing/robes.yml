@@ -33,11 +33,11 @@
 
 - type: entity
   parent: ClothingOuterBase
-  id: ClothingOuterRobeNun
-  name: nun robe
-  description: For a pious lady.
+  id: ClothingOuterRobeTechPriest
+  name: automaturge robe
+  description: Robots are basically bulls when you think about it, so best to wear red.
   components:
   - type: Sprite
-    sprite: Nyanotrasen/Clothing/OuterClothing/Robes/nun.rsi
+    sprite: Nyanotrasen/Clothing/OuterClothing/Robes/techpriest.rsi
   - type: Clothing
-    sprite: Nyanotrasen/Clothing/OuterClothing/Robes/nun.rsi
+    sprite: Nyanotrasen/Clothing/OuterClothing/Robes/techpriest.rsi

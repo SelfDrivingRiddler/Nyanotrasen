@@ -1,30 +1,10 @@
 - type: entity
-  id: HolosignWetFloor
-  name: wet floor sign
-  description: The words flicker as if they mean nothing.
-  components:
-  - type: Physics
-    bodyType: Static
-  - type: Sprite
-    sprite: Nyanotrasen/Structures/Holo/wetfloor.rsi
-    state: icon
-  - type: InvisibleWall
-
-- type: entity
-  id: HoloFan
-  parent: HolosignWetFloor
-  name: holofan
-  description: A barrier of hard light that blocks air, but nothing else.
+  id: HolosignEng
+  name: engineering warning sign
+  description: What's the worst that could lie beyond?
   components:
   - type: Sprite
-    sprite: Nyanotrasen/Structures/Holo/holofan.rsi
+    sprite: Nyanotrasen/Structures/Holo/eng.rsi
     state: icon
-  - type: Fixtures
-    fixtures:
-    - shape:
-        !type:PhysShapeAabb
-          bounds: "-0.5,-0.5,0.5,0.5"
-  - type: InvisibleWall
-    despawnTime: 180
-  - type: Airtight
-    noAirWhenFullyAirBlocked: false
+  - type: TimedDespawn
+    lifetime: 180

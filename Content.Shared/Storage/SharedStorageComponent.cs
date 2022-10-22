@@ -28,10 +28,10 @@ namespace Content.Shared.Storage
         }
 
         [Serializable, NetSerializable]
-        public sealed class StorageRemoveItemMessage : BoundUserInterfaceMessage
+        public sealed class StorageInteractWithItemEvent : BoundUserInterfaceMessage
         {
             public readonly EntityUid InteractedItemUID;
-            public StorageRemoveItemMessage(EntityUid interactedItemUID)
+            public StorageInteractWithItemEvent(EntityUid interactedItemUID)
             {
                 InteractedItemUID = interactedItemUID;
             }
@@ -43,7 +43,6 @@ namespace Content.Shared.Storage
             Key,
         }
 
-        [Dependency] private readonly IEntityManager _entMan = default!;
         public abstract IReadOnlyList<EntityUid>? StoredEntities { get; }
 
         /// <summary>
@@ -77,6 +76,7 @@ namespace Content.Shared.Storage
     public enum StorageVisuals : byte
     {
         Open,
+        HasContents,
         CanLock,
         Locked
     }

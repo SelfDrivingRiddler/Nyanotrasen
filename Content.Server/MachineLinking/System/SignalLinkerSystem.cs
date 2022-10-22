@@ -209,7 +209,7 @@ namespace Content.Server.MachineLinking.System
             if (!TryComp(linker.SavedReceiver, out SignalReceiverComponent? receiver))
             {
                 _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-saved", ("machine", uid)),
-                    Filter.Entities(args.User));
+                    Filter.Entities(args.User), PopupType.Medium);
                 args.Handled = true;
                 return;
             }
@@ -235,7 +235,7 @@ namespace Content.Server.MachineLinking.System
             if (!TryComp(linker.SavedTransmitter, out SignalTransmitterComponent? transmitter))
             {
                 _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-saved", ("machine", uid)),
-                    Filter.Entities(args.User));
+                    Filter.Entities(args.User), PopupType.Medium);
                 args.Handled = true;
                 return;
             }
@@ -277,11 +277,14 @@ namespace Content.Server.MachineLinking.System
 
         }
 
-        private bool TryLink(SignalTransmitterComponent transmitter, SignalReceiverComponent receiver, SignalPortSelected args, EntityUid user, bool quiet = false, bool checkRange = true)
+        private bool TryLink(SignalTransmitterComponent transmitter, SignalReceiverComponent receiver, SignalPortSelected args, EntityUid? user, bool quiet = false, bool checkRange = true)
         {
             if (!transmitter.Outputs.TryGetValue(args.TransmitterPort, out var linkedReceivers) ||
                 !receiver.Inputs.TryGetValue(args.ReceiverPort, out var linkedTransmitters))
                 return false;
+
+            // Accounts for possibly missing user & the quiet option.
+            var alertFilter = (!quiet && user != null) ? Filter.Entities(user.Value) : null;
 
             // Does the link already exist? Under the assumption that nothing has broken, lets only check the
             // transmitter ports.
@@ -293,38 +296,42 @@ namespace Content.Server.MachineLinking.System
 
             if (checkRange && !IsInRange(transmitter, receiver))
             {
-                if (!quiet)
+                if (alertFilter != null)
                     _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-out-of-range"),
-                        Filter.Entities(user));
+                        alertFilter);
                 return false;
             }
 
             // allow other systems to refuse the connection
             var linkAttempt = new LinkAttemptEvent(user, transmitter.Owner, args.TransmitterPort, receiver.Owner, args.ReceiverPort);
-            RaiseLocalEvent(transmitter.Owner, linkAttempt);
+            RaiseLocalEvent(transmitter.Owner, linkAttempt, true);
             if (linkAttempt.Cancelled)
             {
-                if (!quiet)
+                if (alertFilter != null)
                     _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-connection-refused", ("machine", transmitter.Owner)),
-                        Filter.Entities(user));
+                        alertFilter);
                 return false;
             }
-            RaiseLocalEvent(receiver.Owner, linkAttempt);
+            RaiseLocalEvent(receiver.Owner, linkAttempt, true);
             if (linkAttempt.Cancelled)
             {
-                if (!quiet)
+                if (alertFilter != null)
                     _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-connection-refused", ("machine", receiver.Owner)),
-                        Filter.Entities(user));
+                        alertFilter);
                 return false;
             }
 
             linkedReceivers.Add(new(receiver.Owner, args.ReceiverPort));
             linkedTransmitters.Add(new(transmitter.Owner, args.TransmitterPort));
-            if (!quiet)
+            if (alertFilter != null)
                 _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-linked-port",
                     ("machine1", transmitter.Owner), ("port1", PortName<TransmitterPortPrototype>(args.TransmitterPort)),
                     ("machine2", receiver.Owner), ("port2", PortName<ReceiverPortPrototype>(args.ReceiverPort))),
-                    Filter.Entities(user));
+                    alertFilter, PopupType.Medium);
+
+            var newLink = new NewLinkEvent(user, transmitter.Owner, args.TransmitterPort, receiver.Owner, args.ReceiverPort);
+            RaiseLocalEvent(receiver.Owner, newLink);
+            RaiseLocalEvent(transmitter.Owner, newLink);
 
             return true;
         }
@@ -346,12 +353,12 @@ namespace Content.Server.MachineLinking.System
                 if (receivers.Remove(new(receiver.Owner, args.ReceiverPort)) &&
                     transmitters.Remove(new(transmitter.Owner, args.TransmitterPort)))
                 {
-                    RaiseLocalEvent(receiver.Owner, new PortDisconnectedEvent(args.ReceiverPort));
-                    RaiseLocalEvent(transmitter.Owner, new PortDisconnectedEvent(args.TransmitterPort));
+                    RaiseLocalEvent(receiver.Owner, new PortDisconnectedEvent(args.ReceiverPort), true);
+                    RaiseLocalEvent(transmitter.Owner, new PortDisconnectedEvent(args.TransmitterPort), true);
                     _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-unlinked-port",
                         ("machine1", transmitter.Owner), ("port1", PortName<TransmitterPortPrototype>(args.TransmitterPort)),
                         ("machine2", receiver.Owner), ("port2", PortName<ReceiverPortPrototype>(args.ReceiverPort))),
-                        Filter.Entities(attached));
+                        Filter.Entities(attached), PopupType.Medium);
                 }
                 else
                 { // something weird happened
@@ -387,11 +394,11 @@ namespace Content.Server.MachineLinking.System
 
             foreach (var (port, receivers) in transmitter.Outputs)
                 if (receivers.RemoveAll(id => id.Uid == receiver.Owner) > 0)
-                    RaiseLocalEvent(transmitter.Owner, new PortDisconnectedEvent(port));
+                    RaiseLocalEvent(transmitter.Owner, new PortDisconnectedEvent(port), true);
 
             foreach (var (port, transmitters) in receiver.Inputs)
                 if (transmitters.RemoveAll(id => id.Uid == transmitter.Owner) > 0)
-                    RaiseLocalEvent(receiver.Owner, new PortDisconnectedEvent(port));
+                    RaiseLocalEvent(receiver.Owner, new PortDisconnectedEvent(port), true);
 
             TryUpdateUI(linker, transmitter, receiver);
         }
@@ -413,7 +420,7 @@ namespace Content.Server.MachineLinking.System
         ///     Attempt to link all default ports connections. Returns true if all links succeeded. Otherwise returns
         ///     false.
         /// </summary>
-        public bool TryLinkDefaults(EntityUid receiverUid, EntityUid transmitterUid, EntityUid user,
+        public bool TryLinkDefaults(EntityUid receiverUid, EntityUid transmitterUid, EntityUid? user,
             SignalReceiverComponent? receiver = null, SignalTransmitterComponent? transmitter = null)
         {
             if (!Resolve(receiverUid, ref receiver, false) || !Resolve(transmitterUid, ref transmitter, false))
@@ -427,11 +434,11 @@ namespace Content.Server.MachineLinking.System
             // First, disconnect existing links.
             foreach (var (port, receivers) in transmitter.Outputs)
                 if (receivers.RemoveAll(id => id.Uid == receiver.Owner) > 0)
-                    RaiseLocalEvent(transmitter.Owner, new PortDisconnectedEvent(port));
+                    RaiseLocalEvent(transmitter.Owner, new PortDisconnectedEvent(port), true);
 
             foreach (var (port, transmitters) in receiver.Inputs)
                 if (transmitters.RemoveAll(id => id.Uid == transmitter.Owner) > 0)
-                    RaiseLocalEvent(receiver.Owner, new PortDisconnectedEvent(port));
+                    RaiseLocalEvent(receiver.Owner, new PortDisconnectedEvent(port), true);
 
             // Then make any valid default connections.
             foreach (var outPort in transmitter.Outputs.Keys)

@@ -9,4 +9,8 @@
     state: bluespace
   - type: Material
     materials:
-      Bluespace: 400
+      Bluespace: 100
+  - type: Tag
+    tags:
+      - BluespaceCrystal
+      - RawMaterial

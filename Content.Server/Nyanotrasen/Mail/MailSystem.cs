@@ -3,11 +3,15 @@ using Content.Server.Power.Components;
 using Content.Server.Popups;
 using Content.Server.Access.Systems;
 using Content.Server.Cargo.Components;
+using Content.Server.Cargo.Systems;
+using Content.Server.Station.Systems;
+using Content.Server.Chat.Systems;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Access.Components;
 using Content.Shared.Access.Systems;
+using Content.Shared.Destructible;
 using Content.Shared.Storage;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mail;
@@ -27,6 +31,9 @@ namespace Content.Server.Mail
         [Dependency] private readonly IdCardSystem _idCardSystem = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
         [Dependency] private readonly TagSystem _tagSystem = default!;
+        [Dependency] private readonly CargoSystem _cargoSystem = default!;
+        [Dependency] private readonly StationSystem _stationSystem = default!;
+        [Dependency] private readonly ChatSystem _chatSystem = default!;
 
         // TODO: YAML Serializer won't catch this.
         [ViewVariables(VVAccess.ReadWrite)]
@@ -39,12 +46,18 @@ namespace Content.Server.Mail
             "MailCigarettes",
             "MailFigurine",
             "MailBible",
-            "MailCapGun",
-            "MailGatfruit",
             "MailCrayon",
             "MailPlushie",
             "MailPAI",
             "MailSunglasses",
+            "MailBlockGameDIY",
+            "MailSpaceVillainDIY",
+            "MailBooks",
+            "MailNoir",
+            "MailHighlander",
+            "MailFlashlight",
+            "MailKnife",
+            "MailCigars",
             "MailKatana"
         };
 
@@ -56,6 +69,7 @@ namespace Content.Server.Mail
             SubscribeLocalEvent<MailComponent, UseInHandEvent>(OnUseInHand);
             SubscribeLocalEvent<MailComponent, AfterInteractUsingEvent>(OnAfterInteractUsing);
             SubscribeLocalEvent<MailComponent, ExaminedEvent>(OnExamined);
+            SubscribeLocalEvent<MailComponent, DestructionEventArgs>(OnDestruction);
         }
 
         public override void Update(float frameTime)
@@ -133,7 +147,7 @@ namespace Content.Server.Mail
                 return;
             }
 
-            if (!_accessSystem.IsAllowed(access, args.User))
+            if (!_accessSystem.IsAllowed(uid, args.User))
             {
                 _popupSystem.PopupEntity(Loc.GetString("mail-invalid-access"), uid, Filter.Entities(args.User));
                 return;
@@ -141,13 +155,13 @@ namespace Content.Server.Mail
             _popupSystem.PopupEntity(Loc.GetString("mail-bounty", ("bounty", component.Bounty)), uid, Filter.Entities(args.User));
             component.Locked = false;
             UpdateAntiTamperVisuals(uid, false);
-            /// This needs to be revisited for multistation
-            /// For now let's just add the bounty to the first
-            /// console we find.
-            foreach (var console in EntityQuery<CargoConsoleComponent>())
+
+            foreach (var account in EntityQuery<StationBankAccountComponent>())
             {
-                if (console.BankAccount != null)
-                    console.BankAccount.Balance += component.Bounty;
+                if (_stationSystem.GetOwningStation(account.Owner) != _stationSystem.GetOwningStation(uid))
+                        continue;
+
+                _cargoSystem.UpdateBankAccount(account, component.Bounty);
                 return;
             }
         }
@@ -163,13 +177,34 @@ namespace Content.Server.Mail
             args.PushMarkup(Loc.GetString("mail-desc-close", ("name", component.Recipient), ("job", component.RecipientJob)));
         }
 
+        private void OnDestruction(EntityUid uid, MailComponent component, DestructionEventArgs args)
+        {
+            if (component.Locked)
+            {
+                _chatSystem.TrySendInGameICMessage(uid, Loc.GetString("mail-penalty", ("credits", component.Penalty)), InGameICChatType.Speak, false);
+                SoundSystem.Play("/Audio/Machines/Nuke/angry_beep.ogg", Filter.Pvs(uid), uid);
+                foreach (var account in EntityQuery<StationBankAccountComponent>())
+                {
+                    if (_stationSystem.GetOwningStation(account.Owner) != _stationSystem.GetOwningStation(uid))
+                            continue;
+
+                    _cargoSystem.UpdateBankAccount(account, component.Penalty);
+                }
+            }
+
+            if (component.Enabled)
+                OpenMail(uid, component);
+            UpdateAntiTamperVisuals(uid, false);
+        }
+
         public void SpawnMail(EntityUid uid)
         {
-            SoundSystem.Play(Filter.Pvs(uid), "/Audio/Effects/teleport_arrival.ogg", uid);
-            /// This needs to be revisited for multistation
+            SoundSystem.Play("/Audio/Effects/teleport_arrival.ogg", Filter.Pvs(uid), uid);
             List<(string recipientName, string recipientJob, HashSet<String> accessTags)> candidateList = new();
             foreach (var receiver in EntityQuery<MailReceiverComponent>())
             {
+                if (_stationSystem.GetOwningStation(receiver.Owner) != _stationSystem.GetOwningStation(uid))
+                        continue;
                 if (_idCardSystem.TryFindIdCard(receiver.Owner, out var idCard) && TryComp<AccessComponent>(idCard.Owner, out var access)
                     && idCard.FullName != null && idCard.JobTitle != null)
                 {
@@ -185,7 +220,7 @@ namespace Content.Server.Mail
                 return;
             }
 
-            for (int i = (candidateList.Count / 8) + 1; i < 3; i++)
+            for (int i = 0; i < ((candidateList.Count / 8) + 1); i++)
             {
                 var mail = EntityManager.SpawnEntity(_random.Pick(MailPrototypes), Transform(uid).Coordinates);
                 var mailComp = EnsureComp<MailComponent>(mail);
@@ -203,7 +238,7 @@ namespace Content.Server.Mail
             if (!Resolve(uid, ref component))
                 return;
 
-            SoundSystem.Play(Filter.Pvs(uid), "/Audio/Effects/packetrip.ogg", uid);
+            SoundSystem.Play("/Audio/Effects/packetrip.ogg", Filter.Pvs(uid), uid);
 
             var contentList = EntitySpawnCollection.GetSpawns(component.Contents, _random);
             if (user != null)

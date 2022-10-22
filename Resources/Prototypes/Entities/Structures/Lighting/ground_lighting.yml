@@ -3,12 +3,13 @@
   parent: BaseStructure
   id: BaseLightStructure
   components:
+  - type: InteractionOutline
   - type: Fixtures
     fixtures:
     - shape:
         !type:PhysShapeAabb
         bounds: "0.17,0.25,-0.17,-0.30"
-      mass: 25
+      density: 190
       mask:
       - MachineMask
       layer:
@@ -47,7 +48,8 @@
     graph: LightFixture
     node: tubeLight
   - type: Sprite
-    sprite: Structures/Decoration/LightPosts/small_light_post.rsi
+    sprite: Structures/Lighting/LightPosts/small_light_post.rsi
+    snapCardinals: true
     layers:
     - state: on
       map: ["enum.PoweredLightLayers.Base"]
@@ -67,7 +69,7 @@
   parent: BaseLightStructure
   components:
   - type: Sprite
-    sprite: Structures/Decoration/LightPosts/small_light_post.rsi
+    sprite: Structures/Lighting/LightPosts/small_light_post.rsi
     state: off
   - type: PointLight
     enabled: false
@@ -76,6 +78,9 @@
     damage:
       types:
         Heat: 20
+  - type: ContainerContainer
+    containers:
+      light_bulb: !type:ContainerSlot
   - type: ApcPowerReceiver
   - type: ExtensionCableReceiver
   - type: DeviceNetwork

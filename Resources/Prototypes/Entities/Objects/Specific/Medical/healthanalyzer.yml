@@ -10,11 +10,15 @@
     state: analyzer
   - type: ActivatableUI
     key: enum.HealthAnalyzerUiKey.Key
+    closeOnHandDeselect: false
   - type: UserInterface
     interfaces:
       - key: enum.HealthAnalyzerUiKey.Key
         type: HealthAnalyzerBoundUserInterface
   - type: HealthAnalyzer
+  - type: Tag
+    tags:
+    - DiscreteHealthAnalyzer
 
 - type: entity
   parent: HandheldHealthAnalyzer
@@ -40,8 +44,8 @@
   parent: HandheldHealthAnalyzer
   id: HandheldHealthAnalyzerZombie
   name: Zombie Infector
-  suffix: DEBUG
+  suffix: Active
   components:
   - type: HealthAnalyzer
     fake: true
-    disease: ZombieInfection
+    disease: ActiveZombieVirus

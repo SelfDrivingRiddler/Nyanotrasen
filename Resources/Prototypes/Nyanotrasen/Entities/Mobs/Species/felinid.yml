@@ -1,26 +1,16 @@
 - type: entity
   save: false
   name: Uwist McHands
-  parent: MobHumanBase
+  parent: BaseMobHuman
   id: MobFelinidBase
   abstract: true
-  description: A miserable pile of nyaas.
+  description: A miserable pile of nyas.
   components:
-  - type: Markings
-    layerPoints:
-      Tail:
-        points: 1
-        required: true
-        defaultMarkings: [CatTail]
-      HeadTop:
-        points: 1
-        required: true
-        defaultMarkings: [CatEars]
   - type: Sprite
     netsync: false
     noRot: true
     drawdepth: Mobs
-    scale: 1, 1
+    scale: 0.8, 0.8
     layers:
     - map: [ "enum.HumanoidVisualLayers.Chest" ]
       color: "#e8b59b"
@@ -108,42 +98,60 @@
       sprite: Mobs/Customization/masking_helpers.rsi
       state: none
       visible: false
+  - type: Humanoid
+    species: Felinid
+  - type: Fixtures
+    fixtures: # TODO: This needs a second fixture just for mob collisions.
+    - shape:
+        !type:PhysShapeCircle
+        radius: 0.28
+      density: 140
+      restitution: 0.0
+      mask:
+      - MobMask
+      layer:
+      - MobLayer
   - type: Body
     template: HumanoidTemplate
     preset: FelinidPreset
   - type: Damageable
     damageContainer: Biological
     damageModifierSet: Felinid
-  - type: UnarmedCombat
-    hitSound:
+  - type: MeleeWeapon
+    soundHit:
       collection: Punch
-    range: 0.8
-    arcwidth: 30
-    arc: claw
+    animation: WeaponArcClaw
     damage:
       types:
         Blunt: 1
         Slash: 4
         Piercing: 1
+  - type: DiseaseCarrier
+    naturalImmunities:
+    - OwOnavirus
+  - type: Thieving
+    stealthy: true
+    stealTime: 1.5
+  - type: Speech
+    speechSounds: Alto
+  - type: DamageOnHighSpeedImpact
+    damage:
+      types:
+        Blunt: 1
+    soundHit:
+      path: /Audio/Effects/hit_kick.ogg
+  - type: Stamina
+    excess: 85
+  - type: PseudoItem
 
 - type: entity
   save: false
-  name: Urist McHands
+  name: Felinid Dummy
   parent: MobHumanDummy
   id: MobFelinidDummy
   noSpawn: true
   description: A dummy felinid meant to be used in character setup.
   components:
-  - type: Markings
-    layerPoints:
-      Tail:
-        points: 1
-        required: true
-        defaultMarkings: [CatTail]
-      HeadTop:
-        points: 1
-        required: true
-        defaultMarkings: [CatEars]
   - type: Sprite
     netsync: false
     noRot: true
@@ -237,4 +245,4 @@
         state: none
         visible: false
 
-#Nya~
+#Nya~~

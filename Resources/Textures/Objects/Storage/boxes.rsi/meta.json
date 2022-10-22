@@ -35,6 +35,9 @@
             "name": "sechud"
         },
         {
+          "name": "bottle"
+        },
+        {
             "name": "box"
         },
         {
@@ -92,6 +95,9 @@
             "name": "mousetraps"
         },
         {
+            "name": "nitrile"
+        },
+        {
             "name": "pda"
         },
         {
@@ -113,6 +119,9 @@
             "name": "writing_of_doom"
         },
         {
+			"name": "headset"
+		},
+		{
             "name": "inhand-left",
             "directions": 4
         },

@@ -6,16 +6,15 @@ namespace Content.Server.Strip
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedStrippableComponent))]
-    [Friend(typeof(StrippableSystem))]
+    [Access(typeof(StrippableSystem))]
     public sealed class StrippableComponent : SharedStrippableComponent
     {
+        /// <summary>
+        /// The strip delay for hands.
+        /// </summary>
         [ViewVariables]
-        [DataField("openDelay")]
-        public float OpenDelay = 4f;
-
-        [ViewVariables]
-        [DataField("delay")]
-        public float StripDelay = 2f;
+        [DataField("handDelay")]
+        public float HandStripDelay = 4f;
 
         public override bool Drop(DragDropEvent args)
         {

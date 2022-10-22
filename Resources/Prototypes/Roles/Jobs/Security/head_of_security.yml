@@ -1,14 +1,21 @@
 - type: job
   id: HeadOfSecurity
-  name: "head of security"
+  name: job-name-hos
+  playTimeTracker: JobHeadOfSecurity
+  requirements:
+    - !type:RoleTimeRequirement
+      role: JobWarden
+      time: 3600
+    - !type:DepartmentTimeRequirement
+      department: Security
+      time: 18000
+    - !type:OverallPlaytimeRequirement
+      time: 54000
   weight: 10
   startingGear: HoSGear
-  departments:
-  - Command
-  - Security
   icon: "HeadOfSecurity"
   requireAdminNotify: true
-  supervisors: "the captain"
+  supervisors: job-supervisors-captain
   canBeAntag: false
   access:
   - HeadOfSecurity
@@ -19,17 +26,24 @@
   - Maintenance
   - Service
   - Detective
+  - External
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: PsionicBonusChance
+      flatBonus: 0.025
 
 - type: startingGear
   id: HoSGear
   equipment:
     jumpsuit: ClothingUniformJumpsuitHoS
     back: ClothingBackpackSecurityFilled
-    shoes: ClothingShoesBootsJack
+    shoes: ClothingShoesBootsCombatFilled
     outerClothing: ClothingOuterCoatHoSTrench
     eyes: ClothingEyesGlassesSecurity
     head: ClothingHeadHatBeretHoS
     id: HoSPDA
+    gloves: ClothingHandsGlovesCombat
     ears: ClothingHeadsetAltSecurity
     belt: ClothingBeltSecurityFilled
   innerclothingskirt: ClothingUniformJumpskirtHoS

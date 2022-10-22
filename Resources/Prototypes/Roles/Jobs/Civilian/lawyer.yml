@@ -1,11 +1,11 @@
 - type: job
   id: Lawyer
-  name: "lawyer"
+  name: job-name-lawyer
+  playTimeTracker: JobLawyer
   startingGear: LawyerGear
-  departments:
-  - Civilian
   icon: "Lawyer"
-  supervisors: "the head of personnel"
+  antagAdvantage: 2 #Starting sec access and radio
+  supervisors: job-supervisors-hop
   access:
   - Service
   - Brig
@@ -14,9 +14,11 @@
   id: LawyerGear
   equipment:
     jumpsuit: ClothingUniformJumpsuitLawyerBlack  # TODO change jumpsuit to randomiser of the 4 variants
-    back: ClothingBackpackBriefcaseFilled
-    shoes: ClothingShoesColorBlack
+    back: ClothingBackpackFilled
+    shoes: ClothingShoesBootsLaceup
     id: LawyerPDA
-    ears: ClothingHeadsetService
+    ears: ClothingHeadsetSecurity
     # TODO add copy of space law
-
+  inhand:
+    right hand: BriefcaseBrownFilled
+  innerclothingskirt: ClothingUniformJumpskirtLawyerBlack

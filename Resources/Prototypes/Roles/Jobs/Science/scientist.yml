@@ -1,23 +1,24 @@
 - type: job
   id: Scientist
-  name: "epistomologist"
+  name: job-name-scientist
+  setPreference: false
+  playTimeTracker: JobScientist
   startingGear: ScientistGear
-  departments:
-  - Epistemics
   icon: "Scientist"
-  supervisors: "the mystagogue"
+  supervisors: job-supervisors-rd
   access:
   - Research
+  - Maintenance
 
 - type: startingGear
   id: ScientistGear
   equipment:
-    jumpsuit: ClothingUniformJumpsuitColorWhite
+    jumpsuit: ClothingUniformJumpsuitScientist
     back: ClothingBackpackScienceFilled
     shoes: ClothingShoesColorWhite
-    outerClothing: ClothingOuterRobeWhite
+    outerClothing: ClothingOuterCoatLab
     id: SciencePDA
     ears: ClothingHeadsetScience
-  innerclothingskirt: ClothingUniformJumpskirtColorWhite
+  innerclothingskirt: ClothingUniformJumpskirtScientist
   satchel: ClothingBackpackSatchelScienceFilled
   duffelbag: ClothingBackpackDuffelScienceFilled

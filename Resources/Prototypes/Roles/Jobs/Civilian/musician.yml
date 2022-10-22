@@ -1,13 +1,13 @@
 - type: job
   id: Musician
-  name: "musician"
+  name: job-name-musician
+  playTimeTracker: JobMusician
   startingGear: MusicianGear
-  departments:
-  - Civilian
   icon: "Musician"
-  supervisors: "whoever hires you"
+  supervisors: job-supervisors-hire
   access:
   - Theatre
+  - Service
   special:
   - !type:GiveItemOnHolidaySpecial
     holiday: MikuDay
@@ -16,10 +16,10 @@
 - type: startingGear
   id: MusicianGear
   equipment:
-    jumpsuit: ClothingUniformJumpsuitLawyerPurple
+    jumpsuit: ClothingUniformJumpsuitMusician
     back: ClothingBackpackMusicianFilled
     eyes: ClothingEyesGlassesSunglasses
-    shoes: ClothingShoesColorBlack
+    shoes: ClothingShoesBootsLaceup
     id: MusicianPDA
     ears: ClothingHeadsetService
   satchel: ClothingBackpackSatchelMusicianFilled

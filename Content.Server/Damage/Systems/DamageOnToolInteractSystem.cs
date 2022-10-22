@@ -11,7 +11,7 @@ namespace Content.Server.Damage.Systems
     public sealed class DamageOnToolInteractSystem : EntitySystem
     {
         [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-        [Dependency] private readonly AdminLogSystem _logSystem = default!;
+        [Dependency] private readonly IAdminLogManager _adminLogger= default!;
 
         public override void Initialize()
         {
@@ -30,10 +30,10 @@ namespace Content.Server.Damage.Systems
                 && welder.Lit
                 && !welder.TankSafe)
             {
-                var dmg = _damageableSystem.TryChangeDamage(args.Target, weldingDamage);
+                var dmg = _damageableSystem.TryChangeDamage(args.Target, weldingDamage, origin: args.User);
 
                 if (dmg != null)
-                    _logSystem.Add(LogType.Damaged,
+                    _adminLogger.Add(LogType.Damaged,
                         $"{ToPrettyString(args.User):user} used {ToPrettyString(args.Used):used} as a welder to deal {dmg.Total:damage} damage to {ToPrettyString(args.Target):target}");
 
                 args.Handled = true;
@@ -42,10 +42,10 @@ namespace Content.Server.Damage.Systems
                 && EntityManager.TryGetComponent<ToolComponent?>(args.Used, out var tool)
                 && tool.Qualities.ContainsAny(component.Tools))
             {
-                var dmg = _damageableSystem.TryChangeDamage(args.Target, damage);
+                var dmg = _damageableSystem.TryChangeDamage(args.Target, damage, origin: args.User);
 
                 if (dmg != null)
-                    _logSystem.Add(LogType.Damaged,
+                    _adminLogger.Add(LogType.Damaged,
                         $"{ToPrettyString(args.User):user} used {ToPrettyString(args.Used):used} as a tool to deal {dmg.Total:damage} damage to {ToPrettyString(args.Target):target}");
 
                 args.Handled = true;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Content.Shared.Audio;
 using Content.Shared.CCVar;
+using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
@@ -23,14 +24,16 @@ namespace Content.Client.Audio
     /// </summary>
     public sealed class AmbientSoundSystem : SharedAmbientSoundSystem
     {
-        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedAudioSystem _audio = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
 
+        private AmbientSoundOverlay? _overlay;
         private int _maxAmbientCount;
-
+        private bool _overlayEnabled;
         private float _maxAmbientRange;
         private float _cooldown;
         private float _accumulator;
@@ -41,11 +44,41 @@ namespace Content.Client.Audio
         /// </summary>
         private int MaxSingleSound => (int) (_maxAmbientCount / (16.0f / 6.0f));
 
-        private Dictionary<AmbientSoundComponent, (IPlayingAudioStream? Stream, string Sound)> _playingSounds = new();
+        private readonly Dictionary<AmbientSoundComponent, (IPlayingAudioStream? Stream, string Sound)> _playingSounds = new();
 
         private const float RangeBuffer = 3f;
 
+        public bool OverlayEnabled
+        {
+            get => _overlayEnabled;
+            set
+            {
+                if (_overlayEnabled == value) return;
+                _overlayEnabled = value;
+                var overlayManager = IoCManager.Resolve<IOverlayManager>();
 
+                if (_overlayEnabled)
+                {
+                    _overlay = new AmbientSoundOverlay(EntityManager, this, EntityManager.System<EntityLookupSystem>());
+                    overlayManager.AddOverlay(_overlay);
+                }
+                else
+                {
+                    overlayManager.RemoveOverlay(_overlay!);
+                    _overlay = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Is this AmbientSound actively playing right now?
+        /// </summary>
+        /// <param name="component"></param>
+        /// <returns></returns>
+        public bool IsActive(AmbientSoundComponent component)
+        {
+            return _playingSounds.ContainsKey(component);
+        }
 
         public override void Initialize()
         {
@@ -87,7 +120,8 @@ namespace Content.Client.Audio
 
             foreach (var (_, (_, sound)) in _playingSounds)
             {
-                if (sound.Equals(countSound)) count++;
+                if (sound.Equals(countSound))
+                    count++;
             }
 
             return count;
@@ -148,7 +182,7 @@ namespace Content.Client.Audio
                     continue;
                 }
 
-                var key = ambientComp.Sound.GetSound();
+                var key = _audio.GetSound(ambientComp.Sound);
 
                 if (!sourceDict.ContainsKey(key))
                     sourceDict[key] = new List<AmbientSoundComponent>(MaxSingleSound);
@@ -156,6 +190,7 @@ namespace Content.Client.Audio
                 sourceDict[key].Add(ambientComp);
             }
 
+            // TODO: Just store the distance from above...
             foreach (var (key, val) in sourceDict)
             {
                 sourceDict[key] = val.OrderByDescending(x =>
@@ -204,7 +239,7 @@ namespace Content.Client.Audio
                     if (_playingSounds.ContainsKey(comp))
                         continue;
 
-                    var sound = comp.Sound.GetSound();
+                    var sound = _audio.GetSound(comp.Sound);
 
                     if (PlayingCount(sound) >= MaxSingleSound)
                     {
@@ -218,7 +253,7 @@ namespace Content.Client.Audio
                         continue;
                     }
 
-                    var audioParams = AudioHelpers
+                    var audioParams = AudioParams.Default
                         .WithVariation(0.01f)
                         .WithVolume(comp.Volume + _ambienceVolume)
                         .WithLoop(true)
@@ -227,11 +262,7 @@ namespace Content.Client.Audio
                         .WithPlayOffset(_random.NextFloat(0.0f, 100.0f))
                         .WithMaxDistance(comp.Range);
 
-                    var stream = SoundSystem.Play(
-                        Filter.Local(),
-                        sound,
-                        comp.Owner,
-                        audioParams);
+                    var stream = _audio.PlayPvs(comp.Sound, comp.Owner, audioParams);
 
                     if (stream == null) continue;
 

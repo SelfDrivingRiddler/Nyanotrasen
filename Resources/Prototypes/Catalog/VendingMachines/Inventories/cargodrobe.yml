@@ -1,7 +1,5 @@
 - type: vendingMachineInventory
   id: CargoDrobeInventory
-  name: CargoDrobe
-  spriteName: cargodrobe
   startingInventory:
     ClothingUniformJumpsuitCargo: 3
     ClothingUniformJumpskirtCargo: 3

@@ -1,11 +1,14 @@
 using System.Linq;
 using Content.Shared.Interaction;
-using Content.Shared.Kitchen;
 using Content.Shared.Research.Prototypes;
-using Content.Server.Chat;
+using Content.Shared.Abilities.Psionics;
+using Content.Server.Chat.Systems;
+using Content.Server.Chat.Managers;
+using Content.Server.Botany;
+using Content.Server.Psionics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
-using Content.Server.Botany;
+using Robust.Server.GameObjects;
 
 namespace Content.Server.Research.Oracle
 {
@@ -14,6 +17,8 @@ namespace Content.Server.Research.Oracle
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
         [Dependency] private readonly ChatSystem _chat = default!;
+        [Dependency] private readonly IChatManager _chatManager = default!;
+        [Dependency] private readonly PsionicsSystem _psionicsSystem = default!;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public readonly IReadOnlyList<string> DemandMessages = new[]
@@ -41,6 +46,24 @@ namespace Content.Server.Research.Oracle
             "σάκλας"
         };
 
+        public readonly IReadOnlyList<String> BlacklistedProtos = new[]
+        {
+            "MobTomatoKiller",
+            "Drone",
+            "QSI",
+            "BluespaceBeaker",
+            "BackpackOfHolding",
+            "SatchelOfHolding",
+            "DuffelbagOfHolding",
+            "TrashBagOfHolding",
+            "BluespaceCrystal",
+            "InsulativeHeadcage",
+            "BodyBag_Folded",
+            "BodyBag",
+            "LockboxDecloner",
+        };
+
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
@@ -57,6 +80,7 @@ namespace Content.Server.Research.Oracle
 
                 if (oracle.Accumulator >= oracle.ResetTime.TotalSeconds)
                 {
+                    oracle.LastDesiredPrototype = oracle.DesiredPrototype;
                     NextItem(oracle);
                 }
             }
@@ -65,6 +89,7 @@ namespace Content.Server.Research.Oracle
         {
             base.Initialize();
             SubscribeLocalEvent<OracleComponent, ComponentInit>(OnInit);
+            SubscribeLocalEvent<OracleComponent, InteractHandEvent>(OnInteractHand);
             SubscribeLocalEvent<OracleComponent, InteractUsingEvent>(OnInteractUsing);
         }
 
@@ -73,12 +98,56 @@ namespace Content.Server.Research.Oracle
             NextItem(component);
         }
 
+        private void OnInteractHand(EntityUid uid, OracleComponent component, InteractHandEvent args)
+        {
+            if (!HasComp<PotentialPsionicComponent>(args.User) || HasComp<PsionicInsulationComponent>(args.User))
+                return;
+
+            if (!TryComp<ActorComponent>(args.User, out var actor))
+                return;
+
+            var message = Loc.GetString("oracle-current-item", ("item", component.DesiredPrototype.Name));
+
+            var messageWrap = Loc.GetString("chat-manager-send-telepathic-chat-wrap-message",
+                ("telepathicChannelName", Loc.GetString("chat-manager-telepathic-channel-name")), ("message", message));
+
+            _chatManager.ChatMessageToOne(Shared.Chat.ChatChannel.Telepathic,
+                message, messageWrap, uid, false, actor.PlayerSession.ConnectedClient, Color.PaleVioletRed);
+
+            if (component.LastDesiredPrototype != null)
+            {
+                var message2 = Loc.GetString("oracle-previous-item", ("item", component.LastDesiredPrototype.Name));
+                var messageWrap2 = Loc.GetString("chat-manager-send-telepathic-chat-wrap-message",
+                    ("telepathicChannelName", Loc.GetString("chat-manager-telepathic-channel-name")), ("message", message2));
+
+                _chatManager.ChatMessageToOne(Shared.Chat.ChatChannel.Telepathic,
+                    message2, messageWrap2, uid, false, actor.PlayerSession.ConnectedClient, Color.PaleVioletRed);
+            }
+        }
         private void OnInteractUsing(EntityUid uid, OracleComponent component, InteractUsingEvent args)
         {
             if (!TryComp<MetaDataComponent>(args.Used, out var meta))
                 return;
+
+            if (meta.EntityPrototype == null)
+                return;
+
+            var validItem = false;
+
+            var nextItem = true;
+
+            if (meta.EntityPrototype.ID.TrimEnd('1') == component.DesiredPrototype.ID.TrimEnd('1'))
+                validItem = true;
+
+            if (component.LastDesiredPrototype != null && meta.EntityPrototype.ID.TrimEnd('1') == component.LastDesiredPrototype.ID.TrimEnd('1'))
+            {
+                nextItem = false;
+                validItem = true;
+                component.LastDesiredPrototype = null;
+            }
+
             /// The trim helps with stacks and singles
-            if (meta.EntityPrototype == null || meta.EntityPrototype.ID.TrimEnd('1') != component.DesiredPrototype.ID.TrimEnd('1'))
+            if (!validItem)
             {
                 _chat.TrySendInGameICMessage(uid, _random.Pick(RejectMessages), InGameICChatType.Speak, true);
                 return;
@@ -88,10 +157,19 @@ namespace Content.Server.Research.Oracle
 
             EntityManager.SpawnEntity("ResearchDisk5000", Transform(uid).Coordinates);
 
-            if (_random.Prob(0.15f))
-                EntityManager.SpawnEntity("MaterialBluespace", Transform(uid).Coordinates);
+            if (TryComp<PotentialPsionicComponent>(args.User, out var potential))
+                _psionicsSystem.RollPsionics(args.User, potential);
 
-            NextItem(component);
+            int i = ((_random.Next() % 4) + 1);
+
+            while (i != 0)
+            {
+                EntityManager.SpawnEntity("MaterialBluespace", Transform(uid).Coordinates);
+                i--;
+            }
+
+            if (nextItem)
+                NextItem(component);
         }
 
         private void NextItem(OracleComponent component)
@@ -107,10 +185,11 @@ namespace Content.Server.Research.Oracle
 
         private string GetDesiredItem()
         {
-            var allMeals = _prototypeManager.EnumeratePrototypes<FoodRecipePrototype>().Select(x => x.Result).ToList();
             var allRecipes = _prototypeManager.EnumeratePrototypes<LatheRecipePrototype>().Select(x => x.Result).ToList();
             var allPlants = _prototypeManager.EnumeratePrototypes<SeedPrototype>().Select(x => x.ProductPrototypes[0]).ToList();
-            var allProtos = allMeals.Concat(allRecipes).Concat(allPlants).ToList();
+            var allProtos = allRecipes.Concat(allPlants).ToList();
+            foreach (var proto in BlacklistedProtos)
+                allProtos.Remove(proto);
             return _random.Pick((allProtos));
         }
     }

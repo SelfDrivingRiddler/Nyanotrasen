@@ -1,33 +1,32 @@
 - type: job
   id: ResearchDirector
-  name: "mystagogue"
+  name: job-name-rd
+  setPreference: false
+  playTimeTracker: JobResearchDirector
+  requirements:
+    - !type:OverallPlaytimeRequirement
+      time: 108000
   weight: 10
   startingGear: ResearchDirectorGear
-  departments:
-  - Command
-  - Epistemics
   icon: "ResearchDirector"
   requireAdminNotify: true
-  supervisors: "the captain"
+  supervisors: job-supervisors-captain
   canBeAntag: false
   access:
   - Research
   - Command
   - Maintenance
   - ResearchDirector
-  - Detective
-  - Chapel
 
 - type: startingGear
   id: ResearchDirectorGear
   equipment:
-    jumpsuit: ClothingUniformJumpsuitColorWhite
+    jumpsuit: ClothingUniformJumpsuitResearchDirector
     back: ClothingBackpackScienceFilled
-    shoes: ClothingShoesColorWhite
-    head: ClothingHeadHoodMystic
-    outerClothing: ClothingOuterRobeMystic
+    shoes: ClothingShoesColorBrown
+    outerClothing: ClothingOuterCoatLab
     id: RnDPDA
-    ears: ClothingHeadsetScience
-  innerclothingskirt: ClothingUniformJumpskirtColorWhite
+    ears: ClothingHeadsetRD
+  innerclothingskirt: ClothingUniformJumpskirtResearchDirector
   satchel: ClothingBackpackSatchelScienceFilled
   duffelbag: ClothingBackpackDuffelScienceFilled

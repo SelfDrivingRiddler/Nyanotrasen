@@ -152,6 +152,9 @@
       "name": "pda-musician"
     },
     {
+      "name": "pda-reporter"
+    },
+    {
       "name": "pda-interncadet"
     },
     {
@@ -162,6 +165,9 @@
     },
     {
       "name": "pda-interntech"
+    },
+    {
+      "name": "pda-ert"
     }
   ]
 }

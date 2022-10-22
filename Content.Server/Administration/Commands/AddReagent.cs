@@ -11,7 +11,7 @@ namespace Content.Server.Administration.Commands
     /// <summary>
     ///     Command that allows you to edit an existing solution by adding (or removing) reagents.
     /// </summary>
-    [AdminCommand(AdminFlags.Fun)]
+    [AdminCommand(AdminFlags.Admin)]
     public sealed class AddReagent : IConsoleCommand
     {
         public string Command => "addreagent";
@@ -32,7 +32,7 @@ namespace Content.Server.Administration.Commands
                 return;
             }
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(uid, out SolutionContainerManagerComponent man))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(uid, out SolutionContainerManagerComponent? man))
             {
                 shell.WriteLine($"Entity does not have any solutions.");
                 return;

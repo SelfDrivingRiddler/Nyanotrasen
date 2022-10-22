@@ -1,7 +1,6 @@
-using Content.Shared.ActionBlocker;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
-using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 
 namespace Content.Shared.Shuttles.Components
 {
@@ -12,9 +11,6 @@ namespace Content.Shared.Shuttles.Components
     [NetworkedComponent]
     public sealed class PilotComponent : Component
     {
-        [Dependency] private readonly IEntitySystemManager _sysMan = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
-
         [ViewVariables] public SharedShuttleConsoleComponent? Console { get; set; }
 
         /// <summary>
@@ -24,42 +20,16 @@ namespace Content.Shared.Shuttles.Components
 
         public const float BreakDistance = 0.25f;
 
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-            if (curState is not PilotComponentState state) return;
+        public Vector2 CurTickStrafeMovement = Vector2.Zero;
+        public float CurTickRotationMovement;
+        public float CurTickBraking;
 
-            var console = state.Console.GetValueOrDefault();
-            if (!console.IsValid())
-            {
-                Console = null;
-                return;
-            }
+        public GameTick LastInputTick = GameTick.Zero;
+        public ushort LastInputSubTick = 0;
 
-            if (!_entMan.TryGetComponent(console, out SharedShuttleConsoleComponent? shuttleConsoleComponent))
-            {
-                Logger.Warning($"Unable to set Helmsman console to {console}");
-                return;
-            }
+        [ViewVariables]
+        public ShuttleButtons HeldButtons = ShuttleButtons.None;
 
-            Console = shuttleConsoleComponent;
-            _sysMan.GetEntitySystem<ActionBlockerSystem>().UpdateCanMove(Owner);
-        }
-
-        public override ComponentState GetComponentState()
-        {
-            return Console == null ? new PilotComponentState(null) : new PilotComponentState(Console.Owner);
-        }
-
-        [Serializable, NetSerializable]
-        private sealed class PilotComponentState : ComponentState
-        {
-            public EntityUid? Console { get; }
-
-            public PilotComponentState(EntityUid? uid)
-            {
-                Console = uid;
-            }
-        }
+        public override bool SendOnlyToOwner => true;
     }
 }

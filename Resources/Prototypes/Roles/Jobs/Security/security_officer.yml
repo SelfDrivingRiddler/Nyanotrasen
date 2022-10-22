@@ -1,17 +1,20 @@
 - type: job
   id: SecurityOfficer
-  name: "security officer"
+  name: job-name-security
+  playTimeTracker: JobSecurityOfficer
+  requirements:
+    - !type:OverallPlaytimeRequirement
+      time: 18000
   startingGear: SecurityOfficerGear
-  departments:
-  - Security
   icon: "SecurityOfficer"
-  supervisors: "the head of security"
+  supervisors: job-supervisors-hos
   canBeAntag: false
   access:
   - Security
   - Brig
   - Maintenance
   - Service
+  - External
 
 - type: startingGear
   id: SecurityOfficerGear

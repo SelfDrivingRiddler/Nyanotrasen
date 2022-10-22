@@ -1,0 +1,18 @@
+- type: job
+  id: Cyborg
+  name: "cyborg"
+  playTimeTracker: JobCyborg
+  requirements:
+    - !type:OverallPlaytimeRequirement
+      time: 24000
+  icon: "Unknown"
+  supervisors: "all humans"
+  canBeAntag: false
+  jobEntity: PlayerCyborgStandard
+  startingGear: CyborgGear # for char preview only
+
+- type: startingGear
+  id: CyborgGear
+  equipment:
+    head: ClothingHeadHatCardborg
+    outerClothing: ClothingOuterCardborg

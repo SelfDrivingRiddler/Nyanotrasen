@@ -1,10 +1,12 @@
 using System.Threading.Tasks;
+using Content.Server.Administration.Components;
+using Content.Server.Administration.Logs;
 using Content.Server.DoAfter;
 using Content.Server.Hands.Components;
 using Content.Shared.Cuffs.Components;
+using Content.Shared.Database;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
-using Content.Shared.Sound;
 using Content.Shared.Stunnable;
 using Robust.Shared.Audio;
 using Robust.Shared.Player;
@@ -13,23 +15,27 @@ namespace Content.Server.Cuffs.Components
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedHandcuffComponent))]
-    public sealed class HandcuffComponent : SharedHandcuffComponent, IAfterInteract
+    public sealed class HandcuffComponent : SharedHandcuffComponent
     {
         [Dependency] private readonly IEntityManager _entities = default!;
+        [Dependency] private readonly IAdminLogManager _adminLogger = default!;
+
+        private string _brokenName = string.Empty;
+        private string _brokenDesc = string.Empty;
 
         /// <summary>
         ///     The time it takes to apply a <see cref="CuffedComponent"/> to an entity.
         /// </summary>
         [ViewVariables]
         [DataField("cuffTime")]
-        public float CuffTime { get; set; } = 5f;
+        public float CuffTime { get; set; } = 3.5f;
 
         /// <summary>
         ///     The time it takes to remove a <see cref="CuffedComponent"/> from an entity.
         /// </summary>
         [ViewVariables]
         [DataField("uncuffTime")]
-        public float UncuffTime { get; set; } = 5f;
+        public float UncuffTime { get; set; } = 3.5f;
 
         /// <summary>
         ///     The time it takes for a cuffed entity to remove <see cref="CuffedComponent"/> from itself.
@@ -77,15 +83,23 @@ namespace Content.Server.Cuffs.Components
         ///     The iconstate used for broken handcuffs
         /// </summary>
         [ViewVariables]
-        [DataField("brokenName")]
-        public string BrokenName { get; set; } = default!;
+        [DataField("brokenName", readOnly: true)]
+        public string BrokenName
+        {
+            get => _brokenName;
+            private set => _brokenName = Loc.GetString(value);
+        }
 
         /// <summary>
         ///     The iconstate used for broken handcuffs
         /// </summary>
         [ViewVariables]
-        [DataField("brokenDesc")]
-        public string BrokenDesc { get; set; } = default!;
+        [DataField("brokenDesc", readOnly: true)]
+        public string BrokenDesc
+        {
+            get => _brokenDesc;
+            private set => _brokenDesc = Loc.GetString(value);
+        }
 
         [ViewVariables]
         public bool Broken
@@ -128,66 +142,17 @@ namespace Content.Server.Cuffs.Components
         /// <summary>
         ///     Used to prevent DoAfter getting spammed.
         /// </summary>
-        private bool _cuffing;
+        public bool Cuffing;
 
         public override ComponentState GetComponentState()
         {
             return new HandcuffedComponentState(Broken ? BrokenState : string.Empty);
         }
 
-        async Task<bool> IAfterInteract.AfterInteract(AfterInteractEventArgs eventArgs)
-        {
-            if (_cuffing) return true;
-
-            if (eventArgs.Target is not {Valid: true} target ||
-                !_entities.TryGetComponent<CuffableComponent?>(eventArgs.Target.Value, out var cuffed))
-            {
-                return false;
-            }
-
-            if (Broken)
-            {
-                eventArgs.User.PopupMessage(Loc.GetString("handcuff-component-cuffs-broken-error"));
-                return true;
-            }
-
-            if (!_entities.TryGetComponent<HandsComponent?>(target, out var hands))
-            {
-                eventArgs.User.PopupMessage(Loc.GetString("handcuff-component-target-has-no-hands-error",("targetName", eventArgs.Target)));
-                return true;
-            }
-
-            if (cuffed.CuffedHandCount >= hands.Count)
-            {
-                eventArgs.User.PopupMessage(Loc.GetString("handcuff-component-target-has-no-free-hands-error",("targetName", eventArgs.Target)));
-                return true;
-            }
-
-            if (!eventArgs.CanReach)
-            {
-                eventArgs.User.PopupMessage(Loc.GetString("handcuff-component-too-far-away-error"));
-                return true;
-            }
-
-            if (eventArgs.Target == eventArgs.User)
-            {
-                eventArgs.User.PopupMessage(Loc.GetString("handcuff-component-target-self"));
-            }
-            else
-            {
-                eventArgs.User.PopupMessage(Loc.GetString("handcuff-component-start-cuffing-target-message",("targetName", eventArgs.Target)));
-                eventArgs.User.PopupMessage(target, Loc.GetString("handcuff-component-start-cuffing-by-other-message",("otherName", eventArgs.User)));
-            }
-            SoundSystem.Play(Filter.Pvs(Owner), StartCuffSound.GetSound(), Owner);
-
-            TryUpdateCuff(eventArgs.User, target, cuffed);
-            return true;
-        }
-
         /// <summary>
         /// Update the cuffed state of an entity
         /// </summary>
-        private async void TryUpdateCuff(EntityUid user, EntityUid target, CuffableComponent cuffs)
+        public async void TryUpdateCuff(EntityUid user, EntityUid target, CuffableComponent cuffs)
         {
             var cuffTime = CuffTime;
 
@@ -195,6 +160,9 @@ namespace Content.Server.Cuffs.Components
             {
                 cuffTime = MathF.Max(0.1f, cuffTime - StunBonus);
             }
+
+            if (_entities.HasComponent<DisarmProneComponent>(target))
+                cuffTime = 0.0f; // cuff them instantly.
 
             var doAfterEventArgs = new DoAfterEventArgs(user, cuffTime, default, target)
             {
@@ -205,25 +173,29 @@ namespace Content.Server.Cuffs.Components
                 NeedHand = true
             };
 
-            _cuffing = true;
+            Cuffing = true;
 
             var result = await EntitySystem.Get<DoAfterSystem>().WaitDoAfter(doAfterEventArgs);
 
-            _cuffing = false;
+            Cuffing = false;
+
+            // TODO these pop-ups need third-person variants (i.e. {$user} is cuffing {$target}!
 
             if (result != DoAfterStatus.Cancelled)
             {
                 if (cuffs.TryAddNewCuffs(user, Owner))
                 {
-                    SoundSystem.Play(Filter.Pvs(Owner), EndCuffSound.GetSound(), Owner);
+                    SoundSystem.Play(EndCuffSound.GetSound(), Filter.Pvs(Owner), Owner);
                     if (target == user)
                     {
                         user.PopupMessage(Loc.GetString("handcuff-component-cuff-self-success-message"));
+                        _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{_entities.ToPrettyString(user):player} has cuffed himself");
                     }
                     else
                     {
                         user.PopupMessage(Loc.GetString("handcuff-component-cuff-other-success-message",("otherName", target)));
                         target.PopupMessage(Loc.GetString("handcuff-component-cuff-by-other-success-message", ("otherName", user)));
+                        _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{_entities.ToPrettyString(user):player} has cuffed {_entities.ToPrettyString(target):player}");
                     }
                 }
             }

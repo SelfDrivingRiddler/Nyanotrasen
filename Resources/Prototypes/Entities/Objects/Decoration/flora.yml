@@ -14,11 +14,23 @@
     - shape:
         !type:PhysShapeCircle
         radius: 0.4
-      mass: 500
+      density: 1000
       layer:
       - HalfWallLayer
       - Opaque
   - type: Climbable
+  - type: Damageable
+    damageContainer: Inorganic
+    damageModifierSet: Metallic
+  - type: Destructible
+    thresholds:
+      - trigger:
+          !type:DamageTrigger
+          damage: 200
+        behaviors:
+          - !type:DoActsBehavior
+            acts: [ "Destruction" ]
+
 
 - type: entity
   id: BaseTree
@@ -37,9 +49,31 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.35,-1.3,0.35,-0.5"
-      mass: 500
+      density: 1000
       layer:
       - WallLayer
+  - type: Damageable
+    damageContainer: Inorganic
+    damageModifierSet: Wood
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 400
+      behaviors:
+        - !type:DoActsBehavior
+          acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          Log:
+            min: 2
+            max: 8
 
 - type: entity
   parent: BaseTree
@@ -53,7 +87,7 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.1,-1.0,0.1,-0.4"
-      mass: 500
+      density: 4000
       layer:
       - WallLayer
 
@@ -69,7 +103,7 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.18,-1.9,0.18,-1.2"
-      mass: 500
+      density: 2000
       layer:
       - WallLayer
 
@@ -85,7 +119,7 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.1,-1.5,0.1,-0.8"
-      mass: 500
+      density: 3500
       layer:
       - WallLayer
 
@@ -309,7 +343,7 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.8,-1.5,0.8,-0.8"
-      mass: 500
+      density: 4500
       layer:
       - WallLayer
 

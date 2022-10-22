@@ -8,6 +8,8 @@
       Acidic: [Touch]
   - type: Input
     context: "human"
+  - type: InputMover
+  - type: MobMover
   - type: DamageOnHighSpeedImpact
     damage:
       types:
@@ -34,7 +36,7 @@
         # Circles, cuz rotation of rectangles looks very bad
         !type:PhysShapeCircle
         radius: 0.35
-      mass: 20
+      density: 50
       mask:
       - MobMask
       layer:
@@ -48,11 +50,6 @@
     netsync: false
   - type: Physics
     bodyType: KinematicController
-  - type: Hands
-    showInHands: false
-  - type: Body
-    template: DroneTemplate
-    preset: DronePreset
   - type: DoAfter
   - type: Pullable
   - type: Examiner
@@ -61,6 +58,9 @@
     safe: false
   - type: StandingState
   - type: Alerts
+  - type: Tag
+    tags:
+      - ShoesRequiredStepTriggerImmune
 
 - type: entity
   name: drone
@@ -68,6 +68,7 @@
   parent: PlayerSiliconBase
   components:
   - type: Drone
+  - type: InnateTool
     tools:
       - id: ClothingBackpackSatchelDrone
       - id: trayScanner
@@ -75,6 +76,7 @@
       - id: WelderExperimental
   - type: NameIdentifier
     group: Drone
+  - type: Eye
   - type: Inventory
     templateId: drone
   - type: Strippable
@@ -82,22 +84,22 @@
     interfaces:
     - key: enum.StrippingUiKey.Key
       type: StrippableBoundUserInterface
-  #- type: GhostTakeoverAvailable
-  #  makeSentient: true
-  #  name: Maintenance Drone
-  #  description: Maintain the station. Ignore other beings except drones.
-  #  rules: |
-  #   You are bound by these laws both in-game and out-of-character:
-  #   1. You may not involve yourself in the matters of another being, even if such matters conflict with Law Two or Law Three, unless the other being is another Drone.
-  #   2. You may not harm any being, regardless of intent or circumstance.
-  #   3. Your goals are to build, maintain, repair, improve, and power to the best of your abilities, You must never actively work against these goals.
+  - type: GhostTakeoverAvailable
+    makeSentient: true
+    name: Maintenance Drone
+    description: Maintain the station. Ignore other beings except drones.
+    rules: |
+      You are bound by these laws both in-game and out-of-character:
+      1. You may not involve yourself in the matters of another being, even if such matters conflict with Law Two or Law Three, unless the other being is another Drone.
+      2. You may not harm any being, regardless of intent or circumstance.
+      3. Your goals are to build, maintain, repair, improve, and power to the best of your abilities, You must never actively work against these goals.
   - type: MovementSpeedModifier
     baseWalkSpeed : 5
     baseSprintSpeed : 5
   - type: MobState
     thresholds:
-      0: !type:NormalMobState {}
-      60: !type:DeadMobState {}
+      0: Alive
+      60: Dead
   - type: Flashable
   - type: NoSlip
   - type: StatusEffects
@@ -107,10 +109,8 @@
     - SlowedDown
   - type: SlowOnDamage
     speedModifierThresholds:
-      20: 0.8
-      30: 0.6
-      40: 0.4
-      50: 0.2
+      30: 0.7
+      50: 0.5
   - type: Temperature
     heatDamageThreshold: 5000
     currentTemperature: 310.15
@@ -130,7 +130,7 @@
     - shape:
         !type:PhysShapeCircle
         radius: 0.35
-      mass: 20
+      density: 50
       mask:
       - SmallMobMask
       layer:
@@ -164,20 +164,34 @@
     autoRot: true
   - type: Tag
     tags:
+      - ShoesRequiredStepTriggerImmune
       - CannotSuicide
+  - type: Hands
+    showInHands: false
+  - type: Body
+    template: DroneTemplate
+    preset: DronePreset
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: SurveillanceCameraSilicon
+    transmitFrequencyId: SurveillanceCamera
+  - type: WirelessNetworkConnection
+    range: 500
+  - type: SurveillanceCamera
+    setupAvailableNetworks:
+      - SurveillanceCameraSilicon
 
 - type: entity
   name: onestar mecha
   id: Onestar
   parent: PlayerSiliconBase
   components:
-  - type: Drone
-    applyLaws: false
+  - type: InnateTool
     tools:
-      - id: Minigun
+      - id: WeaponMinigun
       - id: EnergySword
-      - id: LauncherMultipleRocket
-      - id: XrayCannon
+      - id: WeaponLauncherMultipleRocket
+      - id: WeaponXrayCannon
   - type: UserInterface
     interfaces:
     - key: enum.StrippingUiKey.Key
@@ -186,14 +200,14 @@
     makeSentient: true
     name: Onestar Mecha
     description: You are an experimental mecha created by who-knows-what, all you know is that you have weapons and you detect fleshy moving targets nearby...
-    rules: Use your weapons to cause havok. You are an antagonist.
+    rules: Use your weapons to cause havoc. You are an antagonist.
   - type: MovementSpeedModifier
     baseWalkSpeed : 3
     baseSprintSpeed : 2
   - type: MobState
     thresholds:
-      0: !type:NormalMobState {}
-      1000: !type:DeadMobState {}
+      0: Alive
+      1000: Dead
   - type: Sprite
     drawdepth: Mobs
     netsync: false
@@ -209,15 +223,21 @@
     - shape:
         !type:PhysShapeCircle
         radius: 1
-      mass: 500
+      density: 160
       mask:
       - LargeMobMask
       layer:
       - LargeMobLayer
   - type: Appearance
-    visuals:
-    - type: DamageStateVisualizer
-      rotate: true
-      normal: onestar_boss
-      dead: onestar_boss_wrecked
+    rotate: true
+    states:
+      Alive:
+        Base: onestar_boss
+      Dead:
+        Base: onestar_boss_wrecked
   - type: CombatMode
+  - type: Hands
+    showInHands: false
+  - type: Body
+    template: DroneTemplate
+    preset: DronePreset

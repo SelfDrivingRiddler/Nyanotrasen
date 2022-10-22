@@ -20,6 +20,17 @@
   - type: MailVisuals
     normalState: icon
     trashState: trash
+  - type: Damageable
+    damageContainer: Inorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 40
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Speech
 
 - type: entity
   parent: BaseMail
@@ -48,8 +59,6 @@
   - type: Mail
     contents:
     - id: UniformSchoolgirlBlue
-    - id: ClothingMaskMuzzle
-    - id: Handcuffs
 
 - type: entity
   parent: BaseMail
@@ -125,25 +134,6 @@
 
 - type: entity
   parent: BaseMail
-  id: MailCapGun
-  suffix: CapGun
-  components:
-  - type: Mail
-    contents:
-    - id: RevolverCapGun
-    - id: CapLoader
-
-- type: entity
-  parent: BaseMail
-  id: MailGatfruit
-  suffix: Gatfruit
-  components:
-  - type: Mail
-    contents:
-    - id: GatfruitSeeds
-
-- type: entity
-  parent: BaseMail
   id: MailCrayon
   suffix: Crayon
   components:
@@ -206,7 +196,26 @@
   components:
   - type: Mail
     contents:
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
+    - id: KatanaDulled
+      orGroup: Katana
     - id: Katana
+      orGroup: Katana
 
 - type: entity
   parent: BaseMail
@@ -216,7 +225,7 @@
   - type: Mail
     contents:
     - id: CigarCase
-    - id: Lighter 
+    - id: Lighter
 
 - type: entity
   parent: BaseMail
@@ -243,10 +252,29 @@
   components:
   - type: Mail
     contents:
-    - id: Claymore
     - id: ClothingUniformJumpskirtColorRed
     - id: ClothingHeadHatBeret
     - id: DrinkRedMeadGlass
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: ClaymoreDulled
+      orGroup: Claymore
+    - id: Claymore
+      orGroup: Claymore
 
 - type: entity
   parent: BaseMail
@@ -289,16 +317,6 @@
     contents:
     - id: PaperWrittenAMEScribbles
     - id: Pen
-
-- type: entity
-  parent: BaseMail
-  id: MailMakeshiftLaserPistol
-  suffix: makeshiftlaserpistol
-  components:
-  - type: Mail
-    contents:
-    - id: MakeshiftLaser
-    - id: ClothingHandsGlovesColorYellowBudget
 
 - type: entity
   parent: BaseMail
@@ -356,15 +374,6 @@
     contents:
     - id: Multitool
     - id: RemoteSignaller
-
-- type: entity
-  parent: BaseMail
-  id: MailSkub
-  suffix: skub
-  components:
-  - type: Mail
-    contents:
-    - id: Skub
 
 - type: entity
   parent: BaseMail

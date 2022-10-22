@@ -1,15 +1,31 @@
-- type: uplinkListing
-  id: UplinkMiniEbow
-  category: Weapons
-  itemId: EnergyCrossbowMini
-  listingName: Miniature Energy Crossbow
-  description: A fairly quiet weapon that infinitely recharges and stuns. Good as a combo tool with other weapons.
-  price: 10
-
-- type: uplinkListing
+- type: listing
   id: UplinkKanabou
-  category: Weapons
-  itemId: Kanabou
-  listingName: Kanabou
+  name: Kanabou
   description: A weapon for those who wish to forgo subtlety. Particularly suited to oni.
-  price: 10
+  productEntity: Kanabou
+  cost:
+    Telecrystal: 10
+  categories:
+  - UplinkWeapons
+  conditions:
+  - !type:BuyerSpeciesCondition
+    whitelist:
+    - Oni
+
+- type: listing
+  id: InjectorBloodsuckerNocturine
+  name: nocturine gland injector
+  description: Makes your fangs inject nocturine whenever you suck blood.
+  productEntity: InjectorBloodsuckerNocturine
+  cost:
+    Telecrystal: 8
+  categories:
+  - UplinkMisc
+  conditions:
+  - !type:BuyerSpeciesCondition
+    whitelist:
+    - Lamia
+  - !type:BuyerWhitelistCondition
+    blacklist:
+      components:
+      - SurplusBundle

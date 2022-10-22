@@ -4,8 +4,8 @@ using Content.Server.Ghost.Components;
 using Content.Server.Ghost.Roles.Components;
 using Content.Server.Ghost.Roles.UI;
 using Content.Server.Mind.Components;
-using Content.Server.MobState.States;
 using Content.Server.Players;
+using Content.Server.Database;
 using Content.Shared.Administration;
 using Content.Shared.Database;
 using Content.Shared.Follower;
@@ -18,6 +18,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
+using Robust.Shared.Random;
 using Robust.Shared.Utility;
 
 namespace Content.Server.Ghost.Roles
@@ -27,8 +28,11 @@ namespace Content.Server.Ghost.Roles
     {
         [Dependency] private readonly EuiManager _euiManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly AdminLogSystem _adminLogSystem = default!;
+        [Dependency] private readonly IAdminLogManager _adminLogger = default!;
+        [Dependency] private readonly IRobustRandom _random = default!;
         [Dependency] private readonly FollowerSystem _followerSystem = default!;
+        [Dependency] private readonly IServerDbManager _db = default!;
+
 
         private uint _nextRoleIdentifier;
         private bool _needsUpdateGhostRoleCount = true;
@@ -57,14 +61,14 @@ namespace Content.Server.Ghost.Roles
         {
             switch (args.CurrentMobState)
             {
-                case NormalMobState:
+                case DamageState.Alive:
                 {
                     if (!component.Taken)
                         RegisterGhostRole(component);
                     break;
                 }
-                case CriticalMobState:
-                case DeadMobState:
+                case DamageState.Critical:
+                case DamageState.Dead:
                     UnregisterGhostRole(component);
                     break;
             }
@@ -176,13 +180,19 @@ namespace Content.Server.Ghost.Roles
             UpdateAllEui();
         }
 
-        public void Takeover(IPlayerSession player, uint identifier)
+        public async void Takeover(IPlayerSession player, uint identifier)
         {
+            if (!await _db.GetWhitelistStatusAsync(player.UserId))
+            {
+                CloseEui(player);
+                return;
+            }
+
             if (!_ghostRoles.TryGetValue(identifier, out var role)) return;
             if (!role.Take(player)) return;
 
             if (player.AttachedEntity != null)
-                _adminLogSystem.Add(LogType.GhostRoleTaken, LogImpact.Low, $"{player:player} took the {role.RoleName:roleName} ghost role {ToPrettyString(player.AttachedEntity.Value):entity}");
+                _adminLogger.Add(LogType.GhostRoleTaken, LogImpact.Low, $"{player:player} took the {role.RoleName:roleName} ghost role {ToPrettyString(player.AttachedEntity.Value):entity}");
 
             CloseEui(player);
         }
@@ -221,7 +231,7 @@ namespace Content.Server.Ghost.Roles
 
             foreach (var (id, role) in _ghostRoles)
             {
-                roles[i] = new GhostRoleInfo(){Identifier = id, Name = role.RoleName, Description = role.RoleDescription, Rules = role.RoleRules};
+                roles[i] = new GhostRoleInfo(){Identifier = id, Name = role.RoleName, Description = role.RoleDescription, Rules = ("(REQUIRES WHITELIST) " + role.RoleRules)};
                 i++;
             }
 
@@ -266,8 +276,14 @@ namespace Content.Server.Ghost.Roles
 
         private void OnInit(EntityUid uid, GhostRoleComponent role, ComponentInit args)
         {
+            if (role.Probability < 1f && !_random.Prob(role.Probability))
+            {
+                RemComp<GhostRoleComponent>(uid);
+                return;
+            }
+
             if (role.RoleRules == "")
-                role.RoleRules = Loc.GetString("ghost-role-component-default-rules");
+                role.RoleRules = ("(REQUIRES WHITELIST) " + Loc.GetString("ghost-role-component-default-rules"));
             RegisterGhostRole(role);
         }
 

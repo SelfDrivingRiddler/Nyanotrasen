@@ -10,6 +10,7 @@ using Content.Shared.Rounding;
 using Robust.Shared.Containers;
 using System.Diagnostics.CodeAnalysis;
 using Content.Server.Kitchen.Components;
+using Content.Shared.Containers.ItemSlots;
 
 namespace Content.Server.PowerCell;
 
@@ -17,8 +18,10 @@ public sealed class PowerCellSystem : SharedPowerCellSystem
 {
     [Dependency] private readonly SolutionContainerSystem _solutionsSystem = default!;
     [Dependency] private readonly ExplosionSystem _explosionSystem = default!;
-    [Dependency] private readonly AdminLogSystem _logSystem = default!;
+    [Dependency] private readonly IAdminLogManager _adminLogger = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
+    [Dependency] private readonly SharedAppearanceSystem _sharedAppearanceSystem = default!;
 
     public override void Initialize()
     {
@@ -36,14 +39,20 @@ public sealed class PowerCellSystem : SharedPowerCellSystem
 
     private void OnSlotMicrowaved(EntityUid uid, PowerCellSlotComponent component, BeingMicrowavedEvent args)
     {
-        if (component.CellSlot.Item == null)
-            return;
+        if (_itemSlotsSystem.TryGetSlot(uid, component.CellSlotId, out ItemSlot? slot))
+        {
+            if (slot.Item == null)
+                return;
 
-        RaiseLocalEvent(component.CellSlot.Item.Value, args, false);
+            RaiseLocalEvent(slot.Item.Value, args, false);
+        }
     }
 
     private void OnMicrowaved(EntityUid uid, BatteryComponent component, BeingMicrowavedEvent args)
     {
+        if (component.CurrentCharge == 0)
+            return;
+
         args.Handled = true;
 
         // What the fuck are you doing???
@@ -66,26 +75,26 @@ public sealed class PowerCellSystem : SharedPowerCellSystem
 
         var frac = battery.CurrentCharge / battery.MaxCharge;
         var level = (byte) ContentHelpers.RoundToNearestLevels(frac, 1, PowerCellComponent.PowerCellVisualsLevels);
-        appearance.SetData(PowerCellVisuals.ChargeLevel, level);
+        _sharedAppearanceSystem.SetData(uid, PowerCellVisuals.ChargeLevel, level, appearance);
 
         // If this power cell is inside a cell-slot, inform that entity that the power has changed (for updating visuals n such).
         if (_containerSystem.TryGetContainingContainer(uid, out var container)
             && TryComp(container.Owner, out PowerCellSlotComponent? slot)
-            && slot.CellSlot.Item == uid)
+            && _itemSlotsSystem.TryGetSlot(container.Owner, slot.CellSlotId, out ItemSlot? itemSlot))
         {
-            RaiseLocalEvent(container.Owner, new PowerCellChangedEvent(false), false);
+            if (itemSlot.Item == uid)
+                RaiseLocalEvent(container.Owner, new PowerCellChangedEvent(false), false);
         }
     }
 
     private void Explode(EntityUid uid, BatteryComponent? battery = null)
     {
-        _logSystem.Add(LogType.Explosion, LogImpact.High, $"Sabotaged power cell {ToPrettyString(uid)} is exploding");
+        _adminLogger.Add(LogType.Explosion, LogImpact.High, $"Sabotaged power cell {ToPrettyString(uid)} is exploding");
 
         if (!Resolve(uid, ref battery))
             return;
 
         var radius = MathF.Min(5, MathF.Ceiling(MathF.Sqrt(battery.CurrentCharge) / 30));
-        battery.CurrentCharge = 0;
 
         _explosionSystem.TriggerExplosive(uid, radius: radius);
         QueueDel(uid);
@@ -99,7 +108,13 @@ public sealed class PowerCellSystem : SharedPowerCellSystem
             return false;
         }
 
-        return TryComp(component.CellSlot.Item, out battery);
+        if (_itemSlotsSystem.TryGetSlot(uid, component.CellSlotId, out ItemSlot? slot))
+        {
+            return TryComp(slot.Item, out battery);
+        }
+
+        battery = null;
+        return false;
     }
 
     private void OnSolutionChange(EntityUid uid, PowerCellComponent component, SolutionChangedEvent args)
@@ -110,7 +125,7 @@ public sealed class PowerCellSystem : SharedPowerCellSystem
 
         if (component.IsRigged)
         {
-            _logSystem.Add(LogType.Explosion, LogImpact.Medium, $"Power cell {ToPrettyString(uid)} has been rigged up to explode when used.");
+            _adminLogger.Add(LogType.Explosion, LogImpact.Medium, $"Power cell {ToPrettyString(uid)} has been rigged up to explode when used.");
         }
     }
 

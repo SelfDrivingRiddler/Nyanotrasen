@@ -16,13 +16,12 @@
   - type: InteractionOutline
   - type: Physics
     bodyType: Static
-    fixedRotation: false
   - type: Fixtures
     fixtures:
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.4,-0.5,0.4,0.3"
-      mass: 25
+      density: 190
       mask:
       - MachineMask
       layer:
@@ -33,6 +32,8 @@
   - type: Sprite
     sprite: Structures/Power/power.rsi
     state: generator
+    netsync: false
+    snapCardinals: true
   - type: NodeContainer
     examinable: true
     nodes:
@@ -45,6 +46,9 @@
     supplyRampTolerance: 500
   - type: Anchorable
   - type: Pullable
+  - type: Damageable
+    damageContainer: Inorganic
+    damageModifierSet: Metallic
   - type: Destructible
     thresholds:
     - trigger:
@@ -63,6 +67,8 @@
     maxIntensity: 100
     intensitySlope: 2
     totalIntensity: 200
+  - type: StaticPrice
+    price: 500
 
 # Base Wallmount Generator
 
@@ -149,7 +155,7 @@
     supplyRate: 3000
 
 - type: entity
-  parent: BaseGenerator
+  parent: [ BaseGenerator, ConstructibleMachine ]
   id: GeneratorPlasma
   suffix: Plasma, 5kW
   components:
@@ -158,9 +164,6 @@
   - type: Sprite
     sprite: Structures/Power/Generation/portable_generator.rsi
     state: portgen0_1
-  - type: Construction
-    graph: Machine
-    node: machine
   - type: Wires
     BoardName: "GeneratorPlasma"
     LayoutId: GeneratorPlasma
@@ -168,7 +171,7 @@
     board: GeneratorPlasmaMachineCircuitboard
 
 - type: entity
-  parent: BaseGenerator
+  parent: [ BaseGenerator, ConstructibleMachine ]
   id: GeneratorUranium
   suffix: Uranium, 15kW
   components:
@@ -177,15 +180,11 @@
   - type: Sprite
     sprite: Structures/Power/Generation/portable_generator.rsi
     state: portgen1_1
-  - type: Construction
-    graph: Machine
-    node: machine
   - type: Wires
     BoardName: "GeneratorUranium"
     LayoutId: GeneratorUranium
   - type: Machine
     board: GeneratorUraniumMachineCircuitboard
-
 
 - type: entity
   parent: BaseGeneratorWallmount
@@ -246,8 +245,5 @@
     layers:
       - state: rtg_damaged
       - state: rtg_glow
-  - type: RadiationPulse # ideally only when opened.
-    range: 2
-    decay: false
-    minPulseLifespan: 1
-    maxPulseLifespan: 1
+  - type: RadiationSource # ideally only when opened.
+    intensity: 2

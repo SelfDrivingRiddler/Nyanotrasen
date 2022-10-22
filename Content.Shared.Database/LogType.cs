@@ -69,7 +69,15 @@ public enum LogType
     Trigger = 65,
     Anchor = 66,
     Unanchor = 67,
+    EmergencyShuttle = 68,
     // haha so funny
     Emag = 69,
+    Gib = 70,
     BagOfHolding = 420,
+    Psionics = 421,
+    Identity = 71,
+    CableCut = 72,
+    StorePurchase = 73,
+    LatticeCut = 74,
+    Stripping = 75,
 }

@@ -48,7 +48,7 @@ namespace Content.Server.Arcade.Components
             UpdatePlayerStatus(temp);
         }
 
-        private void UnRegisterPlayerSession(IPlayerSession session)
+        public void UnRegisterPlayerSession(IPlayerSession session)
         {
             if (_player == session)
             {
@@ -72,7 +72,6 @@ namespace Content.Server.Arcade.Components
             if (UserInterface != null)
             {
                 UserInterface.OnReceiveMessage += UserInterfaceOnOnReceiveMessage;
-                UserInterface.OnClosed += UnRegisterPlayerSession;
             }
             _game = new BlockGame(this);
         }
@@ -355,7 +354,8 @@ namespace Content.Server.Arcade.Components
             {
                 _accumulatedFieldFrameTime += frameTime;
 
-                var checkTime = Speed;
+                // Speed goes negative sometimes. uhhhh max() it I guess!!!
+                var checkTime = Math.Max(0.03f, Speed);
 
                 while (_accumulatedFieldFrameTime >= checkTime)
                 {

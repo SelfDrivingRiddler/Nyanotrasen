@@ -1,14 +1,16 @@
 - type: job
   id: Chef
-  name: "chef"
+  name: job-name-chef
+  playTimeTracker: JobChef
   startingGear: ChefGear
-  departments:
-  - Civilian
   icon: "Chef"
-  supervisors: "the head of personnel"
+  supervisors: job-supervisors-hop
   access:
   - Service
   - Kitchen
+  extendedAccess:
+  - Hydroponics
+  - Bar
 
 - type: startingGear
   id: ChefGear

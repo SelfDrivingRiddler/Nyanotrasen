@@ -10,13 +10,12 @@
     sprite: Structures/Doors/Airlocks/Standard/basic.rsi
     state: "assembly"
   - type: Physics
-    fixedRotation: false
   - type: Fixtures
     fixtures:
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.45,-0.45,0.45,0.45"
-      mass: 100
+      density: 110
       mask:
       - FullTileMask
       layer:

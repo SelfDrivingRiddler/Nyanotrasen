@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Physics;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Random;
 
 namespace Content.Shared.Maps
@@ -12,11 +13,8 @@ namespace Content.Shared.Maps
         /// <summary>
         ///     Attempts to get the turf at map indices with grid id or null if no such turf is found.
         /// </summary>
-        public static TileRef GetTileRef(this Vector2i vector2i, GridId gridId, IMapManager? mapManager = null)
+        public static TileRef GetTileRef(this Vector2i vector2i, EntityUid gridId, IMapManager? mapManager = null)
         {
-            if (!gridId.IsValid())
-                return default;
-
             mapManager ??= IoCManager.Resolve<IMapManager>();
 
             if (!mapManager.TryGetGrid(gridId, out var grid))
@@ -41,7 +39,7 @@ namespace Content.Shared.Maps
 
             mapManager ??= IoCManager.Resolve<IMapManager>();
 
-            if (!mapManager.TryGetGrid(coordinates.GetGridId(entityManager), out var grid))
+            if (!mapManager.TryGetGrid(coordinates.GetGridUid(entityManager), out var grid))
                 return null;
 
 
@@ -89,16 +87,7 @@ namespace Content.Shared.Maps
             return tile.Tile.IsSpace(tileDefinitionManager);
         }
 
-        public static bool PryTile(this EntityCoordinates coordinates, IEntityManager? entityManager = null,
-            IMapManager? mapManager = null)
-        {
-            entityManager ??= IoCManager.Resolve<IEntityManager>();
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-
-            return coordinates.ToVector2i(entityManager, mapManager).PryTile(coordinates.GetGridId(entityManager));
-        }
-
-        public static bool PryTile(this Vector2i indices, GridId gridId,
+        public static bool PryTile(this Vector2i indices, EntityUid gridId,
             IMapManager? mapManager = null, ITileDefinitionManager? tileDefinitionManager = null, IEntityManager? entityManager = null)
         {
             mapManager ??= IoCManager.Resolve<IMapManager>();
@@ -114,13 +103,9 @@ namespace Content.Shared.Maps
             IRobustRandom? robustRandom = null)
         {
             var tile = tileRef.Tile;
-            var indices = tileRef.GridIndices;
 
             // If the arguments are null, resolve the needed dependencies.
-            mapManager ??= IoCManager.Resolve<IMapManager>();
             tileDefinitionManager ??= IoCManager.Resolve<ITileDefinitionManager>();
-            entityManager ??= IoCManager.Resolve<IEntityManager>();
-            robustRandom ??= IoCManager.Resolve<IRobustRandom>();
 
             if (tile.IsEmpty) return false;
 
@@ -128,19 +113,60 @@ namespace Content.Shared.Maps
 
             if (!tileDef.CanCrowbar) return false;
 
-            var mapGrid = mapManager.GetGrid(tileRef.GridIndex);
+            return DeconstructTile(tileRef, mapManager, tileDefinitionManager, entityManager, robustRandom);
+        }
+
+        public static bool CutTile(this TileRef tileRef,
+            IMapManager? mapManager = null,
+            ITileDefinitionManager? tileDefinitionManager = null,
+            IEntityManager? entityManager = null,
+            IRobustRandom? robustRandom = null)
+        {
+            var tile = tileRef.Tile;
+
+            // If the arguments are null, resolve the needed dependencies.
+            tileDefinitionManager ??= IoCManager.Resolve<ITileDefinitionManager>();
+
+            if (tile.IsEmpty) return false;
+
+            var tileDef = (ContentTileDefinition) tileDefinitionManager[tile.TypeId];
+
+            if (!tileDef.CanWirecutter) return false;
+
+            return DeconstructTile(tileRef, mapManager, tileDefinitionManager, entityManager, robustRandom);
+        }
+
+        private static bool DeconstructTile(this TileRef tileRef,
+            IMapManager? mapManager = null,
+            ITileDefinitionManager? tileDefinitionManager = null,
+            IEntityManager? entityManager = null,
+            IRobustRandom? robustRandom = null)
+        {
+            var indices = tileRef.GridIndices;
+
+            mapManager ??= IoCManager.Resolve<IMapManager>();
+            tileDefinitionManager ??= IoCManager.Resolve<ITileDefinitionManager>();
+            entityManager ??= IoCManager.Resolve<IEntityManager>();
+            robustRandom ??= IoCManager.Resolve<IRobustRandom>();
+
+            var tileDef = (ContentTileDefinition) tileDefinitionManager[tileRef.Tile.TypeId];
+            var mapGrid = mapManager.GetGrid(tileRef.GridUid);
+
+            const float margin = 0.1f;
+            var bounds = mapGrid.TileSize - margin * 2;
+            var coordinates = mapGrid.GridTileToLocal(indices)
+                .Offset(new Vector2(
+                    (robustRandom.NextFloat() - 0.5f) * bounds,
+                    (robustRandom.NextFloat() - 0.5f) * bounds));
+
+            //Actually spawn the relevant tile item at the right position and give it some random offset.
+            var tileItem = entityManager.SpawnEntity(tileDef.ItemDropPrototypeName, coordinates);
+            entityManager.GetComponent<TransformComponent>(tileItem).LocalRotation
+                = robustRandom.NextDouble() * Math.Tau;
 
             var plating = tileDefinitionManager[tileDef.BaseTurfs[^1]];
 
-             mapGrid.SetTile(tileRef.GridIndices, new Tile(plating.TileId));
-
-             const float margin = 0.1f;
-
-             var (x, y) = ((mapGrid.TileSize - 2 * margin) * robustRandom.NextFloat() + margin, (mapGrid.TileSize - 2 * margin) * robustRandom.NextFloat() + margin);
-
-            //Actually spawn the relevant tile item at the right position and give it some random offset.
-            var tileItem = entityManager.SpawnEntity(tileDef.ItemDropPrototypeName, indices.ToEntityCoordinates(tileRef.GridIndex, mapManager).Offset(new Vector2(x, y)));
-            entityManager.GetComponent<TransformComponent>(tileItem).LocalRotation = robustRandom.NextDouble() * Math.Tau;
+            mapGrid.SetTile(tileRef.GridIndices, new Tile(plating.TileId));
 
             return true;
         }
@@ -156,7 +182,7 @@ namespace Content.Shared.Maps
             if (!GetWorldTileBox(turf, out var worldBox))
                 return Enumerable.Empty<EntityUid>();
 
-            return lookupSystem.GetEntitiesIntersecting(turf.GridIndex, worldBox, flags);
+            return lookupSystem.GetEntitiesIntersecting(turf.GridUid, worldBox, flags);
         }
 
         /// <summary>
@@ -175,7 +201,7 @@ namespace Content.Shared.Maps
         /// <summary>
         ///     Helper that returns all entities in a turf.
         /// </summary>
-        public static IEnumerable<EntityUid> GetEntitiesInTile(this Vector2i indices, GridId gridId, LookupFlags flags = LookupFlags.Anchored, EntityLookupSystem? lookupSystem = null)
+        public static IEnumerable<EntityUid> GetEntitiesInTile(this Vector2i indices, EntityUid gridId, LookupFlags flags = LookupFlags.Anchored, EntityLookupSystem? lookupSystem = null)
         {
             return GetEntitiesInTile(indices.GetTileRef(gridId), flags, lookupSystem);
         }
@@ -196,7 +222,7 @@ namespace Content.Shared.Maps
                 return false;
 
             var entManager = IoCManager.Resolve<IEntityManager>();
-            var query = physics.GetEntitiesIntersecting(turf.GridIndex, worldBox);
+            var query = physics.GetEntitiesIntersecting(turf.GridUid, worldBox);
 
             foreach (var ent in query)
             {
@@ -218,7 +244,7 @@ namespace Content.Shared.Maps
         {
             mapManager ??= IoCManager.Resolve<IMapManager>();
 
-            return turf.GridIndices.ToEntityCoordinates(turf.GridIndex, mapManager);
+            return turf.GridIndices.ToEntityCoordinates(turf.GridUid, mapManager);
         }
 
         /// <summary>
@@ -228,7 +254,7 @@ namespace Content.Shared.Maps
         {
             var map = IoCManager.Resolve<IMapManager>();
 
-            if (map.TryGetGrid(turf.GridIndex, out var tileGrid))
+            if (map.TryGetGrid(turf.GridUid, out var tileGrid))
             {
                 // This is scaled to 90 % so it doesn't encompass walls on other tiles.
                 var tileBox = Box2.UnitCentered.Scale(0.9f);

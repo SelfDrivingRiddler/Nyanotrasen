@@ -4,44 +4,44 @@ meta:
   author: Space-Wizards
   postmapinit: false
 tilemap:
-  0: space
-  1: floor_asteroid_coarse_sand0
-  2: floor_asteroid_coarse_sand1
-  3: floor_asteroid_coarse_sand2
-  4: floor_asteroid_coarse_sand_dug
-  5: floor_asteroid_sand
-  6: floor_asteroid_tile
-  7: floor_bar
-  8: floor_blue
-  9: floor_blue_circuit
-  10: floor_clown
-  11: floor_dark
-  12: floor_elevator_shaft
-  13: floor_freezer
-  14: floor_glass
-  15: floor_gold
-  16: floor_grass
-  17: floor_green_circuit
-  18: floor_hydro
-  19: floor_kitchen
-  20: floor_laundry
-  21: floor_lino
-  22: floor_mime
-  23: floor_mono
-  24: floor_reinforced
-  25: floor_rglass
-  26: floor_rock_vault
-  27: floor_showroom
-  28: floor_silver
-  29: floor_snow
-  30: floor_steel
-  31: floor_steel_dirty
-  32: floor_techmaint
-  33: floor_white
-  34: floor_wood
-  35: lattice
-  36: plating
-  37: underplating
+  0: Space
+  1: FloorAsteroidCoarseSand0
+  2: FloorAsteroidCoarseSand1
+  3: FloorAsteroidCoarseSand2
+  4: FloorAsteroidCoarseSandDug
+  5: FloorAsteroidSand
+  6: FloorAsteroidTile
+  7: FloorBar
+  8: FloorBlue
+  9: FloorBlueCircuit
+  10: FloorClown
+  11: FloorDark
+  12: FloorElevatorShaft
+  13: FloorFreezer
+  14: FloorGlass
+  15: FloorGold
+  16: FloorGrass
+  17: FloorGreenCircuit
+  18: FloorHydro
+  19: FloorKitchen
+  20: FloorLaundry
+  21: FloorLino
+  22: FloorMime
+  23: FloorMono
+  24: FloorReinforced
+  25: FloorRGlass
+  26: FloorRockVault
+  27: FloorShowroom
+  28: FloorSilver
+  29: FloorSnow
+  30: FloorSteel
+  31: FloorSteelDirty
+  32: FloorTechMaint
+  33: FloorWhite
+  34: FloorWood
+  35: Lattice
+  36: Plating
+  37: Plating
 grids:
 - settings:
     chunksize: 16
@@ -438,7 +438,7 @@ entities:
     parent: 179
     type: Transform
 - uid: 58
-  type: BaseResearchAndDevelopmentPointSource
+  type: UnfinishedMachineFrame
   components:
   - pos: 13.5,16.5
     parent: 179
@@ -880,10 +880,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 128
   type: LockerMedical
   components:
@@ -893,10 +890,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 129
   type: LockerMedical
   components:
@@ -906,10 +900,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 130
   type: LockerMedical
   components:
@@ -919,10 +910,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 131
   type: CrateMedical
   components:
@@ -933,9 +921,9 @@ entities:
   - isPlaceable: False
     type: PlaceableSurface
   - containers:
-      EntityStorageComponent: !type:Container
+      entity_storage: !type:Container
         ents: []
-      PaperLabel: !type:ContainerSlot {}
+      paper_label: !type:ContainerSlot {}
     type: ContainerContainer
 - uid: 132
   type: CrateMedical
@@ -947,9 +935,9 @@ entities:
   - isPlaceable: False
     type: PlaceableSurface
   - containers:
-      EntityStorageComponent: !type:Container
+      entity_storage: !type:Container
         ents: []
-      PaperLabel: !type:ContainerSlot {}
+      paper_label: !type:ContainerSlot {}
     type: ContainerContainer
 - uid: 133
   type: Beaker
@@ -1314,7 +1302,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 318.3216
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1327,7 +1314,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 23.601591
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1340,7 +1326,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 222.80157
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1353,7 +1338,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 190.88159
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1366,7 +1350,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 574.0015
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1379,7 +1362,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 538.08154
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1392,7 +1374,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 94.88158
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1405,7 +1386,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 31.52159
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1418,7 +1398,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 15.681593
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1431,7 +1410,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 107.041595
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1444,7 +1422,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 63.36159
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1457,7 +1434,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 99.20159
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1470,7 +1446,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 47.441586
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1483,7 +1458,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 254.40157
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1496,7 +1470,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 238.48157
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1509,7 +1482,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 139.04158
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1522,7 +1494,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 95.12158
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1535,7 +1506,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 55.281586
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1548,7 +1518,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 71.281586
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1561,7 +1530,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 178.88159
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1574,7 +1542,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 15.601599
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1587,7 +1554,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 446.16156
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1600,7 +1566,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 7.7615967
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1613,7 +1578,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 35.20158
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1626,7 +1590,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 298.40155
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1639,7 +1602,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 362.40155
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1652,7 +1614,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 86.96158
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1665,7 +1626,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 39.12158
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1678,7 +1638,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 50.881573
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1691,7 +1650,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 83.20169
       restitution: 0.1
     - shape: !type:PolygonShape
         vertices:
@@ -1704,7 +1662,6 @@ entities:
       - MapGrid
       layer:
       - MapGrid
-      mass: 154.72157
       restitution: 0.1
     type: Fixtures
   - gravityShakeSound: !type:SoundPathSpecifier
@@ -1713,25 +1670,17 @@ entities:
   - chunkCollection: {}
     type: DecalGrid
 - uid: 180
-  type: LaserGun
+  type: WeaponLaserGun
   components:
   - pos: -1.47174,4.550247
     parent: 179
     type: Transform
-  - containers:
-      Content.Server.Weapon.Ranged.Barrels.Components.BatteryBarrelComponent-ammo-container: !type:ContainerSlot {}
-      cellslot_cell_container: !type:ContainerSlot {}
-    type: ContainerContainer
 - uid: 181
-  type: LaserGun
+  type: WeaponLaserGun
   components:
   - pos: -0.6748645,4.487747
     parent: 179
     type: Transform
-  - containers:
-      Content.Server.Weapon.Ranged.Barrels.Components.BatteryBarrelComponent-ammo-container: !type:ContainerSlot {}
-      cellslot_cell_container: !type:ContainerSlot {}
-    type: ContainerContainer
 - uid: 182
   type: Brutepack
   components:
@@ -1757,13 +1706,13 @@ entities:
     parent: 179
     type: Transform
 - uid: 186
-  type: PowerCellSmallHigh
+  type: PowerCellMedium
   components:
   - pos: -2.67511,-10.351
     parent: 179
     type: Transform
 - uid: 187
-  type: PowerCellSmallHigh
+  type: PowerCellMedium
   components:
   - pos: -2.55011,-10.6635
     parent: 179
@@ -2248,9 +2197,9 @@ entities:
   - isPlaceable: False
     type: PlaceableSurface
   - containers:
-      EntityStorageComponent: !type:Container
+      entity_storage: !type:Container
         ents: []
-      PaperLabel: !type:ContainerSlot {}
+      paper_label: !type:ContainerSlot {}
     type: ContainerContainer
 - uid: 267
   type: Table
@@ -2573,10 +2522,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 320
   type: MedkitFilled
   components:
@@ -2606,10 +2552,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 323
   type: FireExtinguisher
   components:
@@ -2629,7 +2572,7 @@ entities:
     parent: 179
     type: Transform
 - uid: 326
-  type: ComputerSupplyRequest
+  type: ComputerCargoOrders
   components:
   - pos: 0.5,-5.5
     parent: 179
@@ -2639,7 +2582,7 @@ entities:
         ents: []
     type: ContainerContainer
 - uid: 327
-  type: ComputerSupplyOrdering
+  type: ComputerCargoOrders
   components:
   - pos: 0.5,0.5
     parent: 179
@@ -3053,10 +2996,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 390
   type: WallSolid
   components:
@@ -3279,18 +3219,14 @@ entities:
   - pos: -1.934832,-5.154238
     parent: 179
     type: Transform
-  - containers:
-      cellslot_cell_container: !type:ContainerSlot {}
-    type: ContainerContainer
+
 - uid: 422
   type: FlashlightLantern
   components:
   - pos: -2.017696,-5.71715
     parent: 179
     type: Transform
-  - containers:
-      cellslot_cell_container: !type:ContainerSlot {}
-    type: ContainerContainer
+
 - uid: 423
   type: Crowbar
   components:
@@ -3336,35 +3272,23 @@ entities:
         ents: []
     type: ContainerContainer
 - uid: 429
-  type: MagazinePistolSmg
+  type: MagazinePistolSubMachineGun
   components:
   - pos: -6.605512,7.638151
     parent: 179
     type: Transform
-  - containers:
-      Content.Server.Weapon.Ranged.Ammunition.Components.RangedMagazineComponent-magazine: !type:Container
-        ents: []
-    type: ContainerContainer
 - uid: 430
-  type: MagazinePistolSmg
+  type: MagazinePistolSubMachineGun
   components:
   - pos: -6.339887,7.669401
     parent: 179
     type: Transform
-  - containers:
-      Content.Server.Weapon.Ranged.Ammunition.Components.RangedMagazineComponent-magazine: !type:Container
-        ents: []
-    type: ContainerContainer
 - uid: 431
-  type: MagazinePistolSmg
+  type: MagazinePistolSubMachineGun
   components:
   - pos: -6.027387,7.622526
     parent: 179
     type: Transform
-  - containers:
-      Content.Server.Weapon.Ranged.Ammunition.Components.RangedMagazineComponent-magazine: !type:Container
-        ents: []
-    type: ContainerContainer
 - uid: 432
   type: ClothingBackpack
   components:
@@ -3392,24 +3316,24 @@ entities:
     parent: 179
     type: Transform
 - uid: 435
-  type: SmgC20r
+  type: WeaponSubMachineGunC20r
   components:
   - pos: -2.524035,7.579326
     parent: 179
     type: Transform
   - containers:
-      Content.Server.Weapon.Ranged.Barrels.Components.MagazineBarrelComponent-chamber: !type:ContainerSlot {}
-      Content.Server.Weapon.Ranged.Barrels.Components.MagazineBarrelComponent-magazine: !type:ContainerSlot {}
+      gun_chamber: !type:ContainerSlot {}
+      gun_magazine: !type:ContainerSlot {}
     type: ContainerContainer
 - uid: 436
-  type: SmgC20r
+  type: WeaponSubMachineGunC20r
   components:
   - pos: -1.94591,7.485576
     parent: 179
     type: Transform
   - containers:
-      Content.Server.Weapon.Ranged.Barrels.Components.MagazineBarrelComponent-chamber: !type:ContainerSlot {}
-      Content.Server.Weapon.Ranged.Barrels.Components.MagazineBarrelComponent-magazine: !type:ContainerSlot {}
+      gun_chamber: !type:ContainerSlot {}
+      gun_magazine: !type:ContainerSlot {}
     type: ContainerContainer
 - uid: 437
   type: WallSolid
@@ -3516,10 +3440,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 454
   type: WallSolid
   components:
@@ -3968,10 +3889,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 525
   type: ClosetToolFilled
   components:
@@ -3981,10 +3899,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 526
   type: ClosetToolFilled
   components:
@@ -3994,10 +3909,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 527
   type: ClosetToolFilled
   components:
@@ -4007,10 +3919,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 528
   type: ClosetToolFilled
   components:
@@ -4020,10 +3929,7 @@ entities:
     type: Transform
   - isPlaceable: False
     type: PlaceableSurface
-  - containers:
-      EntityStorageComponent: !type:Container
-        ents: []
-    type: ContainerContainer
+
 - uid: 529
   type: SheetGlass
   components:

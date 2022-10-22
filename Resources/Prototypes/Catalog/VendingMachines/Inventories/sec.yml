@@ -1,8 +1,5 @@
 - type: vendingMachineInventory
   id: SecTechInventory
-  name: SecTech
-  animationDuration: 2.8
-  spriteName: sec
   startingInventory:
     Handcuffs: 8
     GrenadeFlashBang: 4
@@ -11,6 +8,12 @@
     ClothingEyesGlassesSunglasses: 2
     ClothingBeltSecurityWebbing: 5
     Zipties: 12
+    RiotShield: 2
+    RiotLaserShield: 2
+    RiotBulletShield: 2
+    ClothingHeadHelmetInsulated: 2
+    ClothingHeadCage: 2
+    HyperlinkBookSpaceLaw: 2
   # security officers need to follow a diet regimen!
   contrabandInventory:
     FoodDonutHomer: 12

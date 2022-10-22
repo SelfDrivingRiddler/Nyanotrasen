@@ -1,7 +1,7 @@
 namespace Content.Shared.Friction
 {
     [RegisterComponent]
-    [Friend(typeof(SharedTileFrictionController))]
+    [Access(typeof(TileFrictionController))]
     public sealed class TileFrictionModifierComponent : Component
     {
         /// <summary>

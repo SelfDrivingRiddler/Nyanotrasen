@@ -3,16 +3,23 @@ using Content.Server.Atmos.Components;
 using Content.Server.Stunnable;
 using Content.Server.Temperature.Components;
 using Content.Server.Temperature.Systems;
+using Content.Server.Weapons.Melee.Events;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Alert;
 using Content.Shared.Atmos;
 using Content.Shared.Damage;
 using Content.Shared.Database;
 using Content.Shared.Interaction;
+using Content.Shared.Physics;
 using Content.Shared.Popups;
+using Content.Shared.Rejuvenate;
 using Content.Shared.Temperature;
+using Robust.Server.GameObjects;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 
 namespace Content.Server.Atmos.EntitySystems
 {
@@ -24,48 +31,82 @@ namespace Content.Server.Atmos.EntitySystems
         [Dependency] private readonly TemperatureSystem _temperatureSystem = default!;
         [Dependency] private readonly DamageableSystem _damageableSystem = default!;
         [Dependency] private readonly AlertsSystem _alertsSystem = default!;
-        [Dependency] private readonly AdminLogSystem _logSystem = default!;
+        [Dependency] private readonly TransformSystem _transformSystem = default!;
+        [Dependency] private readonly FixtureSystem _fixture = default!;
+        [Dependency] private readonly IAdminLogManager _adminLogger = default!;
 
         private const float MinimumFireStacks = -10f;
         private const float MaximumFireStacks = 20f;
         private const float UpdateTime = 1f;
 
         private const float MinIgnitionTemperature = 373.15f;
+        public const string FlammableFixtureID = "flammable";
 
         private float _timer = 0f;
 
         private Dictionary<FlammableComponent, float> _fireEvents = new();
 
-        // TODO: Port the rest of Flammable.
         public override void Initialize()
         {
             UpdatesAfter.Add(typeof(AtmosphereSystem));
 
-            SubscribeLocalEvent<FlammableComponent, InteractUsingEvent>(OnInteractUsingEvent);
-            SubscribeLocalEvent<FlammableComponent, StartCollideEvent>(OnCollideEvent);
-            SubscribeLocalEvent<FlammableComponent, IsHotEvent>(OnIsHotEvent);
-            SubscribeLocalEvent<FlammableComponent, TileFireEvent>(OnTileFireEvent);
+            SubscribeLocalEvent<FlammableComponent, MapInitEvent>(OnMapInit);
+            SubscribeLocalEvent<FlammableComponent, InteractUsingEvent>(OnInteractUsing);
+            SubscribeLocalEvent<FlammableComponent, StartCollideEvent>(OnCollide);
+            SubscribeLocalEvent<FlammableComponent, IsHotEvent>(OnIsHot);
+            SubscribeLocalEvent<FlammableComponent, TileFireEvent>(OnTileFire);
+            SubscribeLocalEvent<FlammableComponent, RejuvenateEvent>(OnRejuvenate);
             SubscribeLocalEvent<IgniteOnCollideComponent, StartCollideEvent>(IgniteOnCollide);
+            SubscribeLocalEvent<IgniteOnMeleeHitComponent, MeleeHitEvent>(OnMeleeHit);
         }
 
-        private void IgniteOnCollide(EntityUid uid, IgniteOnCollideComponent component, StartCollideEvent args)
+        private void OnMeleeHit(EntityUid uid, IgniteOnMeleeHitComponent component, MeleeHitEvent args)
+        {
+            foreach (var entity in args.HitEntities)
+            {
+                if (!TryComp<FlammableComponent>(entity, out var flammable))
+                    continue;
+
+                flammable.FireStacks += component.FireStacks;
+                Ignite(entity, flammable);
+            }
+        }
+
+        private void IgniteOnCollide(EntityUid uid, IgniteOnCollideComponent component, ref StartCollideEvent args)
         {
             var otherFixture = args.OtherFixture.Body.Owner;
 
-            if (!EntityManager.TryGetComponent(otherFixture, out FlammableComponent flammable))
+            if (!EntityManager.TryGetComponent(otherFixture, out FlammableComponent? flammable))
                 return;
 
             flammable.FireStacks += component.FireStacks;
             Ignite(otherFixture, flammable);
         }
 
-        private void OnInteractUsingEvent(EntityUid uid, FlammableComponent flammable, InteractUsingEvent args)
+        private void OnMapInit(EntityUid uid, FlammableComponent component, MapInitEvent args)
+        {
+            // Sets up a fixture for flammable collisions.
+            // TODO: Should this be generalized into a general non-hard 'effects' fixture or something? I can't think of other use cases for it.
+            // This doesn't seem great either (lots more collisions generated) but there isn't a better way to solve it either that I can think of.
+
+            if (!TryComp<PhysicsComponent>(uid, out var body))
+                return;
+
+            _fixture.TryCreateFixture(body, new Fixture(body, component.FlammableCollisionShape)
+            {
+                Hard = false,
+                ID = FlammableFixtureID,
+                CollisionMask = (int) CollisionGroup.FullTileLayer
+            });
+        }
+
+        private void OnInteractUsing(EntityUid uid, FlammableComponent flammable, InteractUsingEvent args)
         {
             if (args.Handled)
                 return;
 
             var isHotEvent = new IsHotEvent();
-            RaiseLocalEvent(args.Used, isHotEvent, false);
+            RaiseLocalEvent(args.Used, isHotEvent);
 
             if (!isHotEvent.IsHot)
                 return;
@@ -74,9 +115,15 @@ namespace Content.Server.Atmos.EntitySystems
             args.Handled = true;
         }
 
-        private void OnCollideEvent(EntityUid uid, FlammableComponent flammable, StartCollideEvent args)
+        private void OnCollide(EntityUid uid, FlammableComponent flammable, ref StartCollideEvent args)
         {
             var otherUid = args.OtherFixture.Body.Owner;
+
+            // Normal hard collisions, though this isn't generally possible since most flammable things are mobs
+            // which don't collide with one another, shouldn't work here.
+            if (args.OtherFixture.ID != FlammableFixtureID && args.OurFixture.ID != FlammableFixtureID)
+                return;
+
             if (!EntityManager.TryGetComponent(otherUid, out FlammableComponent? otherFlammable))
                 return;
 
@@ -97,7 +144,8 @@ namespace Content.Server.Atmos.EntitySystems
                     otherFlammable.FireStacks += flammable.FireStacks;
                     Ignite(otherUid, otherFlammable);
                 }
-            } else if (otherFlammable.OnFire)
+            }
+            else if (otherFlammable.OnFire)
             {
                 otherFlammable.FireStacks /= 2;
                 flammable.FireStacks += otherFlammable.FireStacks;
@@ -105,12 +153,12 @@ namespace Content.Server.Atmos.EntitySystems
             }
         }
 
-        private void OnIsHotEvent(EntityUid uid, FlammableComponent flammable, IsHotEvent args)
+        private void OnIsHot(EntityUid uid, FlammableComponent flammable, IsHotEvent args)
         {
             args.IsHot = flammable.OnFire;
         }
 
-        private void OnTileFireEvent(EntityUid uid, FlammableComponent flammable, ref TileFireEvent args)
+        private void OnTileFire(EntityUid uid, FlammableComponent flammable, ref TileFireEvent args)
         {
             var tempDelta = args.Temperature - MinIgnitionTemperature;
 
@@ -119,6 +167,11 @@ namespace Content.Server.Atmos.EntitySystems
 
             if (tempDelta > maxTemp)
                 _fireEvents[flammable] = tempDelta;
+        }
+
+        private void OnRejuvenate(EntityUid uid, FlammableComponent component, RejuvenateEvent args)
+        {
+            Extinguish(uid, component);
         }
 
         public void UpdateAppearance(EntityUid uid, FlammableComponent? flammable = null, AppearanceComponent? appearance = null)
@@ -151,7 +204,7 @@ namespace Content.Server.Atmos.EntitySystems
             if (!flammable.OnFire)
                 return;
 
-            _logSystem.Add(LogType.Flammable, $"{ToPrettyString(flammable.Owner):entity} stopped being on fire damage");
+            _adminLogger.Add(LogType.Flammable, $"{ToPrettyString(flammable.Owner):entity} stopped being on fire damage");
             flammable.OnFire = false;
             flammable.FireStacks = 0;
 
@@ -167,7 +220,7 @@ namespace Content.Server.Atmos.EntitySystems
 
             if (flammable.FireStacks > 0 && !flammable.OnFire)
             {
-                _logSystem.Add(LogType.Flammable, $"{ToPrettyString(flammable.Owner):entity} is on fire");
+                _adminLogger.Add(LogType.Flammable, $"{ToPrettyString(flammable.Owner):entity} is on fire");
                 flammable.OnFire = true;
             }
 
@@ -243,7 +296,7 @@ namespace Content.Server.Atmos.EntitySystems
                 {
                     // TODO FLAMMABLE: further balancing
                     var damageScale = Math.Min((int)flammable.FireStacks, 5);
-                    
+
                     if(TryComp(uid, out TemperatureComponent? temp))
                         _temperatureSystem.ChangeHeat(uid, 12500 * damageScale, false, temp);
 
@@ -257,7 +310,7 @@ namespace Content.Server.Atmos.EntitySystems
                     continue;
                 }
 
-                var air = _atmosphereSystem.GetTileMixture(transform.Coordinates);
+                var air = _atmosphereSystem.GetContainingMixture(uid);
 
                 // If we're in an oxygenless environment, put the fire out.
                 if (air == null || air.GetMoles(Gas.Oxygen) < 1f)
@@ -266,7 +319,13 @@ namespace Content.Server.Atmos.EntitySystems
                     continue;
                 }
 
-                _atmosphereSystem.HotspotExpose(transform.Coordinates, 700f, 50f, true);
+                if(transform.GridUid != null)
+                {
+                    _atmosphereSystem.HotspotExpose(transform.GridUid.Value,
+                        _transformSystem.GetGridOrMapTilePosition(uid, transform),
+                        700f, 50f, true);
+
+                }
 
                 foreach (var otherUid in flammable.Collided.ToArray())
                 {

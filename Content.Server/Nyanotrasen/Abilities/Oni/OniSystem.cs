@@ -1,14 +1,15 @@
-using Content.Server.Weapon.Melee;
-using Content.Server.Weapon.Ranged;
-using Content.Server.Popups;
+using Content.Server.Tools;
+using Content.Shared.Tools.Components;
 using Robust.Shared.Containers;
-using Robust.Shared.Player;
+using Content.Server.Damage.Events;
+using Content.Server.Weapons.Melee.Events;
 
 namespace Content.Server.Abilities.Oni
 {
     public sealed class OniSystem : EntitySystem
     {
-        [Dependency] private readonly PopupSystem _popupSystem = default!;
+        [Dependency] private readonly ToolSystem _toolSystem = default!;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -16,17 +17,23 @@ namespace Content.Server.Abilities.Oni
             SubscribeLocalEvent<OniComponent, EntRemovedFromContainerMessage>(OnEntRemoved);
             SubscribeLocalEvent<OniComponent, MeleeHitEvent>(OnOniMeleeHit);
             SubscribeLocalEvent<HeldByOniComponent, MeleeHitEvent>(OnHeldMeleeHit);
-            SubscribeLocalEvent<HeldByOniComponent, GunFireAttemptEvent>(OnHeldGunFire);
+            SubscribeLocalEvent<HeldByOniComponent, StaminaMeleeHitEvent>(OnStamHit);
         }
 
         private void OnEntInserted(EntityUid uid, OniComponent component, EntInsertedIntoContainerMessage args)
         {
             var heldComp = EnsureComp<HeldByOniComponent>(args.Entity);
             heldComp.Holder = uid;
+
+            if (TryComp<ToolComponent>(args.Entity, out var tool) && _toolSystem.HasQuality(args.Entity, "Prying", tool))
+                tool.SpeedModifier *= 1.66f;
         }
 
         private void OnEntRemoved(EntityUid uid, OniComponent component, EntRemovedFromContainerMessage args)
         {
+            if (TryComp<ToolComponent>(args.Entity, out var tool) && _toolSystem.HasQuality(args.Entity, "Prying", tool))
+                tool.SpeedModifier /= 1.66f;
+
             RemComp<HeldByOniComponent>(args.Entity);
         }
 
@@ -43,12 +50,12 @@ namespace Content.Server.Abilities.Oni
             args.ModifiersList.Add(oni.MeleeModifiers);
         }
 
-        private void OnHeldGunFire(EntityUid uid, HeldByOniComponent component, GunFireAttemptEvent args)
+        private void OnStamHit(EntityUid uid, HeldByOniComponent component, StaminaMeleeHitEvent args)
         {
-            if (args.User != null)
-                _popupSystem.PopupEntity(Loc.GetString("oni-gun-fire"), uid, Filter.Entities(args.User.Value));
+            if (!TryComp<OniComponent>(component.Holder, out var oni))
+                return;
 
-            args.Cancel();
+            args.Multiplier *= oni.StamDamageMultiplier;
         }
     }
 }

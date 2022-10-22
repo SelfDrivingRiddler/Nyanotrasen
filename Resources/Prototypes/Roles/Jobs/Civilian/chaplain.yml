@@ -2,8 +2,11 @@
   id: Chaplain
   name: "cleric"
   startingGear: ChaplainGear
-  departments:
-  - Epistemics
+  requirements:
+    - !type:DepartmentTimeRequirement
+      department: Epistemics
+      time: 3600
+  playTimeTracker: JobChaplain
   icon: "Chaplain"
   supervisors: "the mystagogue"
   access:
@@ -13,6 +16,10 @@
   - !type:AddComponentSpecial
     components:
     - type: BibleUser #Lets them heal with bibles
+  - !type:AddComponentSpecial
+    components:
+    - type: PsionicBonusChance
+      multiplier: 3
 
 - type: startingGear
   id: ChaplainGear
@@ -21,7 +28,7 @@
     back: ClothingBackpackChaplainFilled
     shoes: ClothingShoesColorBlack
     id: ChaplainPDA
-    ears: ClothingHeadsetService
+    ears: ClothingHeadsetScience
   innerclothingskirt: ClothingUniformJumpskirtChaplain
   satchel: ClothingBackpackSatchelChaplainFilled
   duffelbag: ClothingBackpackDuffelChaplainFilled

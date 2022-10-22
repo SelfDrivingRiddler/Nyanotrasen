@@ -21,7 +21,7 @@ namespace Content.Server.Body.Systems
         [Dependency] private readonly SolutionContainerSystem _solutionContainerSystem = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly SharedAdminLogSystem _logSystem = default!;
+        [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
 
         public override void Initialize()
         {
@@ -115,7 +115,7 @@ namespace Content.Server.Body.Systems
                 solutionEntityUid = uid;
             }
 
-            if (solutionEntityUid == null || solution == null)
+            if (solutionEntityUid == null || solution == null || solution.Contents.Count == 0)
                 return;
 
             // randomize the reagent list so we don't have any weird quirks
@@ -172,7 +172,7 @@ namespace Content.Server.Body.Systems
 
                     var actualEntity = bodyEntityUid != null ? bodyEntityUid.Value : solutionEntityUid.Value;
                     var args = new ReagentEffectArgs(actualEntity, (meta).Owner, solution, proto, mostToRemove,
-                        EntityManager, null);
+                        EntityManager, null, entry);
 
                     // do all effects, if conditions apply
                     foreach (var effect in entry.Effects)
@@ -182,7 +182,7 @@ namespace Content.Server.Body.Systems
 
                         if (effect.ShouldLog)
                         {
-                            _logSystem.Add(LogType.ReagentEffect, effect.LogImpact,
+                            _adminLogger.Add(LogType.ReagentEffect, effect.LogImpact,
                                 $"Metabolism effect {effect.GetType().Name:effect} of reagent {args.Reagent.LocalizedName:reagent} applied on entity {actualEntity:entity} at {Transform(actualEntity).Coordinates:coordinates}");
                         }
 

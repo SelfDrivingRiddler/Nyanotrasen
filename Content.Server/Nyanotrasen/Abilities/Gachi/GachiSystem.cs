@@ -3,7 +3,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Inventory.Events;
 using Content.Server.Abilities.Gachi.Components;
 using Content.Server.Clothing.Components;
-using Content.Server.Weapon.Melee;
+using Content.Server.Weapons.Melee.Events;
 using Content.Shared.MobState;
 using Robust.Shared.Audio;
 using Robust.Shared.Player;
@@ -49,10 +49,10 @@ namespace Content.Server.Abilities.Gachi
 
                 if (_random.Prob(0.01f))
                 {
-                    SoundSystem.Play(Filter.Pvs(uid), "/Audio/Effects/Gachi/ripears.ogg", uid, AudioParams.Default.WithVolume(8f));
+                    SoundSystem.Play( "/Audio/Effects/Gachi/ripears.ogg", Filter.Pvs(uid), AudioParams.Default.WithVolume(8f));
                     return;
                 }
-                SoundSystem.Play(Filter.Pvs(uid), component.PainSound.GetSound(), uid);
+                SoundSystem.Play(component.PainSound.GetSound(), Filter.Pvs(uid), uid);
 
             }
         }
@@ -63,7 +63,7 @@ namespace Content.Server.Abilities.Gachi
             {
                 FixedPoint2 newMultiplier = component.Multiplier - 0.25;
                 component.Multiplier = (float) FixedPoint2.Max(FixedPoint2.Zero, newMultiplier);
-                SoundSystem.Play(Filter.Pvs(uid), component.HitOtherSound.GetSound(), uid);
+                SoundSystem.Play(component.HitOtherSound.GetSound(), Filter.Pvs(uid), uid);
             }
         }
 
@@ -71,7 +71,7 @@ namespace Content.Server.Abilities.Gachi
         {
             if (args.CurrentMobState.IsCritical())
             {
-                SoundSystem.Play(Filter.Pvs(uid), "/Audio/Effects/Gachi/knockedhimout.ogg", uid);
+                SoundSystem.Play("/Audio/Effects/Gachi/knockedhimout.ogg", Filter.Pvs(uid), uid);
             }
         }
 
@@ -79,7 +79,7 @@ namespace Content.Server.Abilities.Gachi
         {
             if (!TryComp<ClothingComponent>(uid, out var clothing))
                 return;
-            if (!clothing.SlotFlags.HasFlag(args.SlotFlags))
+            if (!clothing.Slots.HasFlag(args.SlotFlags))
                 return;
             EnsureComp<GachiComponent>(args.Equipee);
             component.IsActive = true;

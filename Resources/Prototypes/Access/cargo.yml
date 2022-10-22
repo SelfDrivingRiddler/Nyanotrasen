@@ -1,15 +1,13 @@
 - type: accessLevel
   id: Cargo
-
-- type: accessLevel
-  id: Salvage
+  name: Cargo
 
 - type: accessLevel
   id: Mail
+  name: Mail
 
 - type: accessGroup
   id: Cargo
   tags:
-  - Salvage
   - Cargo
   - Mail

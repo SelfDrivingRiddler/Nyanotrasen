@@ -3,16 +3,19 @@ using Content.Server.GameTicking;
 using Content.Server.Players;
 using Content.Server.Popups;
 using Content.Server.Power.Components;
+using Content.Server.Power.EntitySystems;
 using Content.Server.Recycling.Components;
 using Content.Shared.Audio;
 using Content.Shared.Body.Components;
 using Content.Shared.Emag.Systems;
+using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Recycling;
 using Content.Shared.Tag;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
@@ -50,7 +53,7 @@ namespace Content.Server.Recycling
                 }
             }
 
-            _popup.PopupEntity(Loc.GetString("recycler-component-suicide-message-others", ("victim", victim)),
+            _popup.PopupEntity(Loc.GetString("recycler-component-suicide-message-others", ("victim", Identity.Entity(victim, EntityManager))),
                 victim,
                 Filter.Pvs(victim, entityManager: EntityManager).RemoveWhereAttachedEntity(e => e == victim));
 
@@ -78,7 +81,7 @@ namespace Content.Server.Recycling
             _ambience.SetAmbience(component.Owner, false);
         }
 
-        private void OnCollide(EntityUid uid, RecyclerComponent component, StartCollideEvent args)
+        private void OnCollide(EntityUid uid, RecyclerComponent component, ref StartCollideEvent args)
         {
             if (component.Enabled && args.OurFixture.ID != "brrt") return;
 
@@ -89,8 +92,8 @@ namespace Content.Server.Recycling
         {
             RecyclableComponent? recyclable = null;
 
-            // Can only recycle things that are recyclable... And also check the safety of the thing to recycle.
-            if (!_tags.HasTag(entity, "Recyclable") &&
+            // Can only recycle things that are tagged trash or recyclable... And also check the safety of the thing to recycle.
+            if (!_tags.HasAnyTag(entity, "Trash", "Recyclable") &&
                 (!TryComp(entity, out recyclable) || !recyclable.Safe && component.Safe))
             {
                 return;
@@ -113,16 +116,15 @@ namespace Content.Server.Recycling
 
             if (component.Sound != null && (_timing.CurTime - component.LastSound).TotalSeconds > RecyclerSoundCooldown)
             {
-                SoundSystem.Play(Filter.Pvs(component.Owner, entityManager: EntityManager), component.Sound.GetSound(), component.Owner, AudioHelpers.WithVariation(0.01f).WithVolume(-3));
+                SoundSystem.Play(component.Sound.GetSound(), Filter.Pvs(component.Owner, entityManager: EntityManager), component.Owner, AudioHelpers.WithVariation(0.01f).WithVolume(-3));
                 component.LastSound = _timing.CurTime;
             }
         }
 
         private bool CanGib(RecyclerComponent component, EntityUid entity)
         {
-            // TODO: Power needs a helper for this jeez
             return HasComp<SharedBodyComponent>(entity) && !component.Safe &&
-                   TryComp<ApcPowerReceiverComponent>(component.Owner, out var receiver) && receiver.Powered;
+                   this.IsPowered(component.Owner, EntityManager);
         }
 
         public void Bloodstain(RecyclerComponent component)

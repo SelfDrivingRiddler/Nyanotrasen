@@ -4,13 +4,13 @@
   parent: SimpleSpaceMobBase
   description: This is really going to let you own some vegans in your next online debate.
   components:
-  - type: UtilityAI
-    behaviorSets:
-    - Idle
-    - UnarmedAttackHostiles
-  - type: AiFactionTag
+  - type: InputMover
+  - type: MobMover
+  - type: HTN
+    rootTask: SimpleHostileCompound
+  - type: Faction
     factions:
-    - SimpleHostile
+      - SimpleHostile
   - type: Sprite
     drawdepth: Mobs
     layers:
@@ -22,21 +22,24 @@
     - shape:
         !type:PhysShapeCircle
         radius: 0.5
-      mass: 50
+      density: 63
       mask:
       - MobMask
       layer:
       - MobLayer
   - type: MobState
     thresholds:
-      0: !type:NormalMobState {}
-      60: !type:DeadMobState {}
+      0: Alive
+      60: Dead
   - type: Appearance
-    visuals:
-    - type: DamageStateVisualizer
-      normal: produce
-      crit: produce_dead
-      dead: produce_dead
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: produce
+      Critical:
+        Base: produce_dead
+      Dead:
+        Base: produce_dead
   - type: Butcherable
     spawned:
     - id: FoodMeatTomato
@@ -54,13 +57,17 @@
   - type: Temperature
     heatDamageThreshold: 500
     coldDamageThreshold: 200
-  - type: UnarmedCombat
-    range: 0.5
-    arcwidth: 0
-    arc: claw
+  - type: MeleeWeapon
+    hidden: true
+    animation: WeaponArcBite
+    soundHit:
+      path: /Audio/Effects/bite.ogg
     damage:
-      groups:
-        Brute: 8
+      types:
+        Piercing: 3
+        Slash: 5
   - type: ReplacementAccent
     accent: genericAggressive
   - type: Produce
+  - type: NoSlip
+

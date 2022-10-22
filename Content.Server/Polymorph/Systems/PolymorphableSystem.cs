@@ -1,18 +1,18 @@
 using Content.Server.Actions;
 using Content.Server.Buckle.Components;
+using Content.Server.Humanoid;
 using Content.Server.Inventory;
 using Content.Server.Mind.Commands;
 using Content.Server.Mind.Components;
 using Content.Server.Polymorph.Components;
-using Content.Server.Popups;
 using Content.Shared.Actions;
 using Content.Shared.Actions.ActionTypes;
 using Content.Shared.Damage;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Polymorph;
+using Robust.Server.Containers;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
-using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -24,11 +24,13 @@ namespace Content.Server.Polymorph.Systems
 
         [Dependency] private readonly ActionsSystem _actions = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
+        [Dependency] private readonly IComponentFactory _compFact = default!;
         [Dependency] private readonly ServerInventorySystem _inventory = default!;
         [Dependency] private readonly SharedHandsSystem _sharedHands = default!;
         [Dependency] private readonly DamageableSystem _damageable = default!;
-        [Dependency] private readonly PopupSystem _popup = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly HumanoidSystem _humanoid = default!;
+        [Dependency] private readonly ContainerSystem _container = default!;
 
         public override void Initialize()
         {
@@ -37,6 +39,7 @@ namespace Content.Server.Polymorph.Systems
             SubscribeLocalEvent<PolymorphableComponent, ComponentStartup>(OnStartup);
             SubscribeLocalEvent<PolymorphableComponent, PolymorphActionEvent>(OnPolymorphActionEvent);
 
+            InitializeCollide();
             InitializeMap();
         }
 
@@ -61,15 +64,15 @@ namespace Content.Server.Polymorph.Systems
         /// </summary>
         /// <param name="target">The entity that will be transformed</param>
         /// <param name="id">The id of the polymorph prototype</param>
-        public void PolymorphEntity(EntityUid target, String id)
+        public EntityUid? PolymorphEntity(EntityUid target, string id)
         {
             if (!_proto.TryIndex<PolymorphPrototype>(id, out var proto))
             {
                 _saw.Error("Invalid polymorph prototype");
-                return;
+                return null;
             }
 
-            PolymorphEntity(target, proto);
+            return PolymorphEntity(target, proto);
         }
 
         /// <summary>
@@ -77,8 +80,16 @@ namespace Content.Server.Polymorph.Systems
         /// </summary>
         /// <param name="target">The entity that will be transformed</param>
         /// <param name="proto">The polymorph prototype</param>
-        public void PolymorphEntity(EntityUid target, PolymorphPrototype proto)
+        public EntityUid? PolymorphEntity(EntityUid target, PolymorphPrototype proto)
         {
+            /// This is the big papa function. This handles the transformation, moving the old entity
+            /// logic and conditions specified in the prototype, and everything else that may be needed.
+            /// I am clinically insane - emo
+
+            // if it's already morphed, don't allow it again with this condition active.
+            if (!proto.AllowRepeatedMorphs && HasComp<PolymorphedEntityComponent>(target))
+                return null;
+
             // mostly just for vehicles
             if (TryComp<BuckleComponent>(target, out var buckle))
                 buckle.TryUnbuckle(target, true);
@@ -88,47 +99,74 @@ namespace Content.Server.Polymorph.Systems
             var child = Spawn(proto.Entity, targetTransformComp.Coordinates);
             MakeSentientCommand.MakeSentient(child, EntityManager);
 
-            var comp = EnsureComp<PolymorphedEntityComponent>(child);
+            var comp = _compFact.GetComponent<PolymorphedEntityComponent>();
+            comp.Owner = child;
             comp.Parent = target;
-            comp.Prototype = proto;
-            RaiseLocalEvent(child, new PolymorphComponentSetupEvent());
+            comp.Prototype = proto.ID;
+            EntityManager.AddComponent(child, comp);
+
+            var childXform = Transform(child);
+            childXform.LocalRotation = targetTransformComp.LocalRotation;
+
+            if (_container.TryGetContainingContainer(target, out var cont))
+                cont.Insert(child);
 
             //Transfers all damage from the original to the new one
-            if (TryComp<DamageableComponent>(child, out var damageParent) &&
+            if (proto.TransferDamage &&
+                TryComp<DamageableComponent>(child, out var damageParent) &&
                 _damageable.GetScaledDamage(target, child, out var damage) &&
                 damage != null)
             {
                 _damageable.SetDamage(damageParent, damage);
             }
 
-            if (proto.DropInventory)
+            if (proto.Inventory == PolymorphInventoryChange.Transfer)
             {
-                //drops everything in the user's inventory
-                if (_inventory.TryGetContainerSlotEnumerator(target, out var enumerator))
-                {
-                    while (enumerator.MoveNext(out var containerSlot))
-                    {
-                        containerSlot.EmptyContainer();
-                    }
-                }
-                //drops everything in the user's hands
+                _inventory.TransferEntityInventories(target, child);
                 foreach (var hand in _sharedHands.EnumerateHeld(target))
                 {
                     hand.TryRemoveFromContainer();
+                    _sharedHands.TryPickupAnyHand(child, hand);
                 }
+            }
+            else if (proto.Inventory == PolymorphInventoryChange.Drop)
+            {
+                if(_inventory.TryGetContainerSlotEnumerator(target, out var enumerator))
+                    while (enumerator.MoveNext(out var slot))
+                        slot.EmptyContainer();
+
+                foreach (var hand in _sharedHands.EnumerateHeld(target))
+                    hand.TryRemoveFromContainer();
+            }
+
+            if (proto.TransferName &&
+                TryComp<MetaDataComponent>(target, out var targetMeta) &&
+                TryComp<MetaDataComponent>(child, out var childMeta))
+            {
+                childMeta.EntityName = targetMeta.EntityName;
+            }
+
+            if (proto.TransferHumanoidAppearance)
+            {
+                _humanoid.CloneAppearance(target, child);
             }
 
             if (TryComp<MindComponent>(target, out var mind) && mind.Mind != null)
-                mind.Mind.TransferTo(child);
+                    mind.Mind.TransferTo(child);
 
             //Ensures a map to banish the entity to
             EnsurePausesdMap();
-            if(PausedMap != null)
+            if (PausedMap != null)
                 targetTransformComp.AttachParent(Transform(PausedMap.Value));
-            
-            _popup.PopupEntity(Loc.GetString("polymorph-popup-generic", ("parent", target), ("child", child)), child, Filter.Pvs(child));
+
+            return child;
         }
 
+        /// <summary>
+        /// Creates a sidebar action for an entity to be able to polymorph at will
+        /// </summary>
+        /// <param name="id">The string of the id of the polymorph action</param>
+        /// <param name="target">The entity that will be gaining the action</param>
         public void CreatePolymorphAction(string id, EntityUid target)
         {
             if (!_proto.TryIndex<PolymorphPrototype>(id, out var polyproto))
@@ -136,7 +174,7 @@ namespace Content.Server.Polymorph.Systems
                 _saw.Error("Invalid polymorph prototype");
                 return;
             }
-                
+
             if (!TryComp<PolymorphableComponent>(target, out var polycomp))
                 return;
 
@@ -144,8 +182,11 @@ namespace Content.Server.Polymorph.Systems
 
             var act = new InstantAction()
             {
-                Event = new PolymorphActionEvent(polyproto),
-                Name = Loc.GetString("polymorph-self-action-name", ("target", entproto.Name)),
+                Event = new PolymorphActionEvent
+                {
+                    Prototype = polyproto,
+                },
+                DisplayName = Loc.GetString("polymorph-self-action-name", ("target", entproto.Name)),
                 Description = Loc.GetString("polymorph-self-action-description", ("target", entproto.Name)),
                 Icon = new SpriteSpecifier.EntityPrototype(polyproto.Entity),
                 ItemIconStyle = ItemActionIconStyle.NoItem,
@@ -173,22 +214,12 @@ namespace Content.Server.Polymorph.Systems
         }
     }
 
-    /// <summary>
-    /// Used after the polymorphedEntity component has it's data set up.
-    /// </summary>
-    public sealed class PolymorphComponentSetupEvent : InstantActionEvent { };
-
     public sealed class PolymorphActionEvent : InstantActionEvent
     {
         /// <summary>
         /// The polymorph prototype containing all the information about
         /// the specific polymorph.
         /// </summary>
-        public readonly PolymorphPrototype Prototype;
-
-        public PolymorphActionEvent(PolymorphPrototype prototype)
-        {
-            Prototype = prototype;
-        }
+        public PolymorphPrototype Prototype = default!;
     };
 }

@@ -16,7 +16,7 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.5,-0.5,0.5,0.5"
-      mass: 15
+      density: 15
       layer:
       - WallLayer
   - type: Damageable
@@ -57,10 +57,11 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.5,-0.5,0.5,0.5"
-      mass: 15
+      density: 15
       layer:
       - WallLayer
   - type: Door
+    occludes: false
     openSound:
       path: /Audio/Misc/zip.ogg
     closeSound:

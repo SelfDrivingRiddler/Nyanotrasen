@@ -42,7 +42,7 @@ public sealed class MindSystem : EntitySystem
             return;
 
         mind.Mind = value;
-        RaiseLocalEvent(uid, new MindAddedMessage());
+        RaiseLocalEvent(uid, new MindAddedMessage(), true);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public sealed class MindSystem : EntitySystem
             return;
 
         if (!Deleted(uid))
-            RaiseLocalEvent(uid, new MindRemovedMessage());
+            RaiseLocalEvent(uid, new MindRemovedMessage(), true);
 
         mind.Mind = null;
     }
@@ -80,7 +80,11 @@ public sealed class MindSystem : EntitySystem
             }
             else if (mind.GhostOnShutdown)
             {
+                // Changing an entities parents while deleting is VERY sus. This WILL throw exceptions.
+                // TODO: just find the applicable spawn position dirctly without actually updating the transform's parent.
+                Transform(uid).AttachToGridOrMap();
                 var spawnPosition = Transform(uid).Coordinates;
+
                 // Use a regular timer here because the entity has probably been deleted.
                 Timer.Spawn(0, () =>
                 {
@@ -89,10 +93,17 @@ public sealed class MindSystem : EntitySystem
                         return;
 
                     // Async this so that we don't throw if the grid we're on is being deleted.
-                    var gridId = spawnPosition.GetGridId(EntityManager);
-                    if (!spawnPosition.IsValid(EntityManager) || gridId == GridId.Invalid || !_mapManager.GridExists(gridId))
+                    var gridId = spawnPosition.GetGridUid(EntityManager);
+                    if (!spawnPosition.IsValid(EntityManager) || gridId == EntityUid.Invalid || !_mapManager.GridExists(gridId))
                     {
                         spawnPosition = _gameTicker.GetObserverSpawnPoint();
+                    }
+
+                    // TODO refactor observer spawning.
+                    if (!spawnPosition.IsValid(EntityManager))
+                    {
+                        Logger.ErrorS("mind", $"Entity \"{ToPrettyString(uid)}\" for {mind.Mind?.CharacterName} was deleted, and no applicable spawn location is available.");
+                        return;
                     }
 
                     var ghost = Spawn("MobObserver", spawnPosition);

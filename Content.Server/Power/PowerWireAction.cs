@@ -27,7 +27,7 @@ public sealed class PowerWireAction : BaseWireAction
     public override StatusLightData? GetStatusLightData(Wire wire)
     {
         StatusLightState lightState = StatusLightState.Off;
-        if (WiresSystem.TryGetData(wire.Owner, PowerWireActionInternalKeys.MainWire, out int main)
+        if (WiresSystem.TryGetData(wire.Owner, PowerWireActionKey.MainWire, out int main)
             && main != wire.Id)
         {
             return null;
@@ -35,7 +35,8 @@ public sealed class PowerWireAction : BaseWireAction
 
         if (IsPowered(wire.Owner))
         {
-            if (WiresSystem.TryGetData(wire.Owner, PowerWireActionKey.Pulsed, out bool pulsed)
+            if (!AllWiresMended(wire.Owner)
+                || WiresSystem.TryGetData(wire.Owner, PowerWireActionKey.Pulsed, out bool pulsed)
                 && pulsed)
             {
                 lightState = StatusLightState.BlinkingSlow;
@@ -56,9 +57,15 @@ public sealed class PowerWireAction : BaseWireAction
 
     private bool AllWiresCut(EntityUid owner)
     {
-        return WiresSystem.TryGetData(owner, PowerWireActionInternalKeys.CutWires, out int? cut)
-            && WiresSystem.TryGetData(owner, PowerWireActionInternalKeys.WireCount, out int? count)
+        return WiresSystem.TryGetData(owner, PowerWireActionKey.CutWires, out int? cut)
+            && WiresSystem.TryGetData(owner, PowerWireActionKey.WireCount, out int? count)
             && count == cut;
+    }
+
+    private bool AllWiresMended(EntityUid owner)
+    {
+        return WiresSystem.TryGetData(owner, PowerWireActionKey.CutWires, out int? cut)
+               && cut == 0;
     }
 
     // I feel like these two should be within ApcPowerReceiverComponent at this point.
@@ -76,32 +83,35 @@ public sealed class PowerWireAction : BaseWireAction
             return;
         }
 
-        if (WiresSystem.TryGetData(owner, PowerWireActionInternalKeys.CutWires, out int? cut)
-            && WiresSystem.TryGetData(owner, PowerWireActionInternalKeys.WireCount, out int? count))
+        if (AllWiresCut(owner))
         {
-            if (AllWiresCut(owner))
+            power.PowerDisabled = true;
+        }
+        else
+        {
+            if (WiresSystem.TryGetData(owner, PowerWireActionKey.Pulsed, out bool isPulsed)
+                && isPulsed)
             {
-                power.PowerDisabled = true;
+                return;
             }
-            else
-            {
-                if (WiresSystem.TryGetData(owner, PowerWireActionKey.Pulsed, out bool isPulsed)
-                    && isPulsed)
-                {
-                    return;
-                }
 
-                power.PowerDisabled = false;
-            }
+            power.PowerDisabled = false;
         }
     }
 
     private void SetWireCuts(EntityUid owner, bool isCut)
     {
-        if (WiresSystem.TryGetData(owner, PowerWireActionInternalKeys.CutWires, out int? cut))
+        if (WiresSystem.TryGetData(owner, PowerWireActionKey.CutWires, out int? cut)
+            && WiresSystem.TryGetData(owner, PowerWireActionKey.WireCount, out int? count))
         {
+            if (cut == count && isCut
+                || cut <= 0 && !isCut)
+            {
+                return;
+            }
+
             cut = isCut ? cut + 1 : cut - 1;
-            WiresSystem.SetData(owner, PowerWireActionInternalKeys.CutWires, cut);
+            WiresSystem.SetData(owner, PowerWireActionKey.CutWires, cut);
         }
     }
 
@@ -114,35 +124,52 @@ public sealed class PowerWireAction : BaseWireAction
         electrified.Enabled = setting;
     }
 
-    /// <returns>false if failed, true otherwise</returns>
+    /// <returns>false if failed, true otherwise, or if the entity cannot be electrified</returns>
     private bool TrySetElectrocution(EntityUid user, Wire wire, bool timed = false)
     {
-        if (EntityManager.TryGetComponent<ApcPowerReceiverComponent>(wire.Owner, out var power)
-            && EntityManager.TryGetComponent<ElectrifiedComponent>(wire.Owner, out var electrified))
+        if (!EntityManager.TryGetComponent<ElectrifiedComponent>(wire.Owner, out var electrified))
         {
-            // always set this to true
-            SetElectrified(wire.Owner, true, electrified);
-
-            // if we were electrified, then return false
-            var electrifiedAttempt = _electrocutionSystem.TryDoElectrifiedAct(wire.Owner, user);
-
-            // if this is timed, we set up a doAfter so that the
-            // electrocution continues - unless cancelled
-            //
-            // if the power is disabled however, just don't bother
-            if (timed && IsPowered(wire.Owner))
-            {
-                WiresSystem.StartWireAction(wire.Owner, _pulseTimeout, PowerWireActionKey.ElectrifiedCancel, new TimedWireEvent(AwaitElectrifiedCancel, wire));
-            }
-            else
-            {
-                SetElectrified(wire.Owner, false, electrified);
-            }
-
-            return !electrifiedAttempt;
+            return true;
         }
 
-        return false;
+        // always set this to true
+        SetElectrified(wire.Owner, true, electrified);
+
+        var electrifiedAttempt = _electrocutionSystem.TryDoElectrifiedAct(wire.Owner, user);
+
+        // if we were electrified, then return false
+        return !electrifiedAttempt;
+
+    }
+
+    private void UpdateElectrocution(Wire wire)
+    {
+        var allCut = AllWiresCut(wire.Owner);
+
+        var activePulse = false;
+
+        if (WiresSystem.TryGetData(wire.Owner, PowerWireActionKey.Pulsed, out bool pulsed))
+        {
+            activePulse = pulsed;
+        }
+
+        // if this is actively pulsed,
+        // and there's not already an electrification cancel occurring,
+        // we need to start that timer immediately
+        if (!WiresSystem.HasData(wire.Owner, PowerWireActionKey.ElectrifiedCancel)
+            && activePulse
+            && IsPowered(wire.Owner)
+            && !allCut)
+        {
+            WiresSystem.StartWireAction(wire.Owner, _pulseTimeout, PowerWireActionKey.ElectrifiedCancel, new TimedWireEvent(AwaitElectrifiedCancel, wire));
+        }
+        else
+        {
+            if (!activePulse && allCut || AllWiresMended(wire.Owner))
+            {
+                SetElectrified(wire.Owner, false);
+            }
+        }
     }
 
     public override void Initialize()
@@ -156,17 +183,17 @@ public sealed class PowerWireAction : BaseWireAction
     // in WiresComponent or ApcPowerReceiverComponent.
     public override bool AddWire(Wire wire, int count)
     {
-        if (!WiresSystem.HasData(wire.Owner, PowerWireActionInternalKeys.CutWires))
+        if (!WiresSystem.HasData(wire.Owner, PowerWireActionKey.CutWires))
         {
-            WiresSystem.SetData(wire.Owner, PowerWireActionInternalKeys.CutWires, 0);
+            WiresSystem.SetData(wire.Owner, PowerWireActionKey.CutWires, 0);
         }
 
         if (count == 1)
         {
-            WiresSystem.SetData(wire.Owner, PowerWireActionInternalKeys.MainWire, wire.Id);
+            WiresSystem.SetData(wire.Owner, PowerWireActionKey.MainWire, wire.Id);
         }
 
-        WiresSystem.SetData(wire.Owner, PowerWireActionInternalKeys.WireCount, count);
+        WiresSystem.SetData(wire.Owner, PowerWireActionKey.WireCount, count);
 
         return true;
     }
@@ -203,10 +230,8 @@ public sealed class PowerWireAction : BaseWireAction
     {
         WiresSystem.TryCancelWireAction(wire.Owner, PowerWireActionKey.ElectrifiedCancel);
 
-        if (!TrySetElectrocution(user, wire, true))
-            return false;
+        var electrocuted = !TrySetElectrocution(user, wire, true);
 
-        // disrupted power shouldn't re-disrupt
         if (WiresSystem.TryGetData(wire.Owner, PowerWireActionKey.Pulsed, out bool pulsedKey)
             && pulsedKey)
         {
@@ -214,18 +239,21 @@ public sealed class PowerWireAction : BaseWireAction
         }
 
         WiresSystem.SetData(wire.Owner, PowerWireActionKey.Pulsed, true);
-
         WiresSystem.StartWireAction(wire.Owner, _pulseTimeout, PowerWireActionKey.PulseCancel, new TimedWireEvent(AwaitPulseCancel, wire));
 
+        if (electrocuted)
+        {
+            return false;
+        }
+
         SetPower(wire.Owner, true);
-
-        // AwaitPulseCancel(wire.Owner, wire, _doAfterSystem.WaitDoAfter(doAfter));
-
         return true;
     }
 
     public override void Update(Wire wire)
     {
+        UpdateElectrocution(wire);
+
         if (!IsPowered(wire.Owner))
         {
             if (!WiresSystem.TryGetData(wire.Owner, PowerWireActionKey.Pulsed, out bool pulsed)
@@ -239,20 +267,15 @@ public sealed class PowerWireAction : BaseWireAction
 
     private void AwaitElectrifiedCancel(Wire wire)
     {
-        WiresSystem.SetData(wire.Owner, PowerWireActionKey.Electrified, false);
-        SetElectrified(wire.Owner, false);
+        if (AllWiresMended(wire.Owner))
+        {
+            SetElectrified(wire.Owner, false);
+        }
     }
 
     private void AwaitPulseCancel(Wire wire)
     {
         WiresSystem.SetData(wire.Owner, PowerWireActionKey.Pulsed, false);
         SetPower(wire.Owner, false);
-    }
-
-    private enum PowerWireActionInternalKeys : byte
-    {
-        MainWire,
-        WireCount,
-        CutWires
     }
 }

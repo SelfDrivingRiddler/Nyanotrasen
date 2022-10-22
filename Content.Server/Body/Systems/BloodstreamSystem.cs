@@ -9,7 +9,11 @@ using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using Content.Shared.IdentityManagement;
 using Content.Shared.MobState.Components;
+using Content.Shared.Popups;
+using Content.Shared.Drunk;
+using Content.Shared.Rejuvenate;
 using Robust.Shared.Audio;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -26,6 +30,8 @@ public sealed class BloodstreamSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
 
+    [Dependency] private readonly SharedDrunkSystem _drunkSystem = default!;
+
     // TODO here
     // Update over time. Modify bloodloss damage in accordance with (amount of blood / max blood level), and reduce bleeding over time
     // Sub to damage changed event and modify bloodloss if incurring large hits of slashing/piercing
@@ -40,6 +46,7 @@ public sealed class BloodstreamSystem : EntitySystem
         SubscribeLocalEvent<BloodstreamComponent, BeingGibbedEvent>(OnBeingGibbed);
         SubscribeLocalEvent<BloodstreamComponent, ApplyMetabolicMultiplierEvent>(OnApplyMetabolicMultiplier);
         SubscribeLocalEvent<BloodstreamComponent, ReactionAttemptEvent>(OnReactionAttempt);
+        SubscribeLocalEvent<BloodstreamComponent, RejuvenateEvent>(OnRejuvenate);
     }
 
     private void OnReactionAttempt(EntityUid uid, BloodstreamComponent component, ReactionAttemptEvent args)
@@ -106,6 +113,11 @@ public sealed class BloodstreamSystem : EntitySystem
                 var amt = bloodstream.BloodlossDamage / (0.1f + bloodPercentage);
 
                 _damageableSystem.TryChangeDamage(uid, amt, true, false);
+
+                // Apply dizziness as a symptom of bloodloss.
+                // So, threshold is 0.9, you have 0.85 percent blood, it adds (5 * 1.05) or 5.25 seconds of drunkenness.
+                // So, it'd max at 1.9 by default with 0% blood.
+                _drunkSystem.TryApplyDrunkenness(uid, bloodstream.UpdateInterval * (1 + (bloodstream.BloodlossThreshold - bloodPercentage)), false);
             }
             else
             {
@@ -154,7 +166,7 @@ public sealed class BloodstreamSystem : EntitySystem
         if (totalFloat > 0 && _robustRandom.Prob(prob))
         {
             TryModifyBloodLevel(uid, (-total) / 5, component);
-            SoundSystem.Play(Filter.Pvs(uid), component.InstantBloodSound.GetSound(), uid, AudioParams.Default);
+            SoundSystem.Play(component.InstantBloodSound.GetSound(), Filter.Pvs(uid), uid, AudioParams.Default);
         }
         else if (totalFloat < 0 && oldBleedAmount > 0 && _robustRandom.Prob(healPopupProb))
         {
@@ -162,9 +174,9 @@ public sealed class BloodstreamSystem : EntitySystem
             // because it's burn damage that cauterized their wounds.
 
             // We'll play a special sound and popup for feedback.
-            SoundSystem.Play(Filter.Pvs(uid), component.BloodHealedSound.GetSound(), uid, AudioParams.Default);
+            SoundSystem.Play(component.BloodHealedSound.GetSound(), Filter.Pvs(uid), uid, AudioParams.Default);
             _popupSystem.PopupEntity(Loc.GetString("bloodstream-component-wounds-cauterized"), uid,
-                Filter.Entities(uid));
+                Filter.Entities(uid), PopupType.Medium);
 ;       }
     }
 
@@ -173,18 +185,18 @@ public sealed class BloodstreamSystem : EntitySystem
         if (component.BleedAmount > 10)
         {
             args.Message.PushNewline();
-            args.Message.AddMarkup(Loc.GetString("bloodstream-component-profusely-bleeding", ("target", uid)));
+            args.Message.AddMarkup(Loc.GetString("bloodstream-component-profusely-bleeding", ("target", Identity.Entity(uid, EntityManager))));
         }
         else if (component.BleedAmount > 0)
         {
             args.Message.PushNewline();
-            args.Message.AddMarkup(Loc.GetString("bloodstream-component-bleeding", ("target", uid)));
+            args.Message.AddMarkup(Loc.GetString("bloodstream-component-bleeding", ("target", Identity.Entity(uid, EntityManager))));
         }
 
         if (GetBloodLevelPercentage(uid, component) < component.BloodlossThreshold)
         {
             args.Message.PushNewline();
-            args.Message.AddMarkup(Loc.GetString("bloodstream-component-looks-pale", ("target", uid)));
+            args.Message.AddMarkup(Loc.GetString("bloodstream-component-looks-pale", ("target", Identity.Entity(uid, EntityManager))));
         }
     }
 
@@ -206,6 +218,12 @@ public sealed class BloodstreamSystem : EntitySystem
             component.AccumulatedFrametime = component.UpdateInterval;
     }
 
+    private void OnRejuvenate(EntityUid uid, BloodstreamComponent component, RejuvenateEvent args)
+    {
+        TryModifyBleedAmount(uid, -component.BleedAmount, component);
+        TryModifyBloodLevel(uid, component.BloodSolution.AvailableVolume, component);
+    }
+
     /// <summary>
     ///     Attempt to transfer provided solution to internal solution.
     /// </summary>
@@ -215,6 +233,22 @@ public sealed class BloodstreamSystem : EntitySystem
             return false;
 
         return _solutionContainerSystem.TryAddSolution(uid, component.ChemicalSolution, solution);
+    }
+
+    public bool FlushChemicals(EntityUid uid, string excludedReagentID, FixedPoint2 quantity, BloodstreamComponent? component = null) {
+        if (!Resolve(uid, ref component, false))
+            return false;
+
+        for (var i = component.ChemicalSolution.Contents.Count - 1; i >= 0; i--)
+        {
+            var (reagentId, _) = component.ChemicalSolution.Contents[i];
+            if (reagentId != excludedReagentID)
+            {
+                _solutionContainerSystem.TryRemoveReagent(uid, component.ChemicalSolution, reagentId, quantity);
+            }
+        }
+
+        return true;
     }
 
     public float GetBloodLevelPercentage(EntityUid uid, BloodstreamComponent? component = null)
@@ -289,8 +323,11 @@ public sealed class BloodstreamSystem : EntitySystem
         var tempSol = new Solution() { MaxVolume = max };
 
         tempSol.AddSolution(component.BloodSolution);
+        component.BloodSolution.RemoveAllSolution();
         tempSol.AddSolution(component.BloodTemporarySolution);
+        component.BloodTemporarySolution.RemoveAllSolution();
         tempSol.AddSolution(component.ChemicalSolution);
+        component.ChemicalSolution.RemoveAllSolution();
         _spillableSystem.SpillAt(uid, tempSol, "PuddleBlood", true);
     }
 }

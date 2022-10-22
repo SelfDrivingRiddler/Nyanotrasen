@@ -1,23 +1,25 @@
 - type: job
   id: Librarian
-  name: "cataloguer"
+  name: job-name-librarian
+  setPreference: false
+  playTimeTracker: JobLibrarian
   startingGear: LibrarianGear
-  departments:
-  - Epistemics
   icon: "Librarian"
-  supervisors: "the head of personnel"
+  supervisors: job-supervisors-hop
   access:
-  - Research
+  - Service
+  - Maintenance
 
 - type: startingGear
   id: LibrarianGear
   equipment:
-    jumpsuit: ClothingUniformJumpsuitColorBrown
-    back: ClothingBackpackBriefcaseFilled
-    shoes: ClothingShoesColorBlack
+    jumpsuit: ClothingUniformJumpsuitLibrarian
+    back: ClothingBackpackFilled
+    shoes: ClothingShoesBootsLaceup
     id: LibrarianPDA
-    outerClothing: ClothingOuterRobeBrown
-    head: ClothingHeadHoodBrown
     ears: ClothingHeadsetService
     pocket1: d10Dice
-  innerclothingskirt: ClothingUniformJumpskirtColorBrown
+  inhand:
+    right hand: BriefcaseBrownFilled
+  innerclothingskirt: ClothingUniformJumpskirtColorLightBrown
+

@@ -1,15 +1,17 @@
 - type: job
   id: StationEngineer
-  name: "station engineer"
+  name: job-name-engineer
+  playTimeTracker: JobStationEngineer
   startingGear: StationEngineerGear
-  departments:
-  - Engineering
   icon: "StationEngineer"
-  supervisors: "the chief engineer"
+  supervisors: job-supervisors-ce
+  antagAdvantage: 3 # The classic ideal traitor role
   access:
   - Maintenance
   - Engineering
   - External
+  extendedAccess:
+  - Atmospherics
 
 - type: startingGear
   id: StationEngineerGear
@@ -20,6 +22,7 @@
     shoes: ClothingShoesBootsWork
     outerClothing: ClothingOuterVestHazard
     id: EngineerPDA
+    eyes: ClothingEyesGlassesMeson
     belt: ClothingBeltUtilityFilled
     ears: ClothingHeadsetEngineering
   innerclothingskirt: ClothingUniformJumpskirtEngineering

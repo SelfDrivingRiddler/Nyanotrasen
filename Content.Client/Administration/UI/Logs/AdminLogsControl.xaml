@@ -1,8 +1,6 @@
 ﻿<Control xmlns="https://spacestation14.io"
          xmlns:aui="clr-namespace:Content.Client.Administration.UI.CustomControls"
-         xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
-         MinWidth="1000"
-         MinHeight="400">
+         xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client">
     <PanelContainer>
         <PanelContainer.PanelOverride>
             <gfx:StyleBoxFlat BackgroundColor="#25252A"/>
@@ -50,6 +48,8 @@
             <BoxContainer Orientation="Vertical" HorizontalExpand="True">
                 <BoxContainer Name="TopRightContainer">
                     <BoxContainer Name="LogImpactContainer" Orientation="Horizontal"/>
+                    <Control HorizontalExpand="True"/>
+                    <Label Name="Count" Access="Public"/>
                     <Control HorizontalExpand="True"/>
                     <Button Name="PopOutButton" Access="Public" Text="{Loc admin-logs-pop-out}"/>
                 </BoxContainer>

@@ -15,6 +15,7 @@
     damageContainer: Inorganic
     damageModifierSet: Metallic
   - type: SubFloorHide
+  - type: CollideOnAnchor
   - type: PipeAppearance
   - type: Anchorable
   - type: Rotatable
@@ -30,22 +31,25 @@
     sprite: Structures/Piping/Atmospherics/pipe.rsi
     drawdepth: ThinPipe
     netsync: false
+    visible: false
   - type: Appearance
-    visuals:
-    - type: PipeColorVisualizer
+  - type: PipeColorVisuals
   - type: NodeContainer
   - type: AtmosUnsafeUnanchor
   - type: AtmosPipeColor
   - type: Tag
     tags:
     - Pipe
+  - type: Physics
+    canCollide: false
   - type: AmbientSound
-    enabled: true
+    enabled: false
     volume: -15
     range: 2
     sound:
       path: /Audio/Ambience/Objects/gas_hiss.ogg
-  - type: GasAnalyzable
+  - type: StaticPrice
+    price: 100
 
 #Note: The PipeDirection of the PipeNode should be the south-facing version, because the entity starts at an angle of 0 (south)
 
@@ -63,7 +67,7 @@
   - type: Sprite
     layers:
       - state: pipeHalf
-        map: [ "enum.PipeColorVisualizer+Layers.Pipe" ]
+        map: [ "enum.PipeVisualLayers.Pipe" ]
   - type: Construction
     graph: GasPipe
     node: half
@@ -82,7 +86,7 @@
   - type: Sprite
     layers:
       - state: pipeStraight
-        map: [ "enum.PipeColorVisualizer+Layers.Pipe" ]
+        map: [ "enum.PipeVisualLayers.Pipe" ]
   - type: Construction
     graph: GasPipe
     node: straight
@@ -101,7 +105,7 @@
   - type: Sprite
     layers:
       - state: pipeBend
-        map: [ "enum.PipeColorVisualizer+Layers.Pipe" ]
+        map: [ "enum.PipeVisualLayers.Pipe" ]
   - type: Construction
     graph: GasPipe
     node: bend
@@ -120,7 +124,7 @@
   - type: Sprite
     layers:
       - state: pipeTJunction
-        map: [ "enum.PipeColorVisualizer+Layers.Pipe" ]
+        map: [ "enum.PipeVisualLayers.Pipe" ]
   - type: Construction
     graph: GasPipe
     node: tjunction
@@ -141,7 +145,7 @@
   - type: Sprite
     layers:
       - state: pipeFourway
-        map: [ "enum.PipeColorVisualizer+Layers.Pipe" ]
+        map: [ "enum.PipeVisualLayers.Pipe" ]
   - type: Construction
     graph: GasPipe
     node: fourway

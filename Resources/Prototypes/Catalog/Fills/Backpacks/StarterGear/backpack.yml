@@ -7,18 +7,6 @@
     contents:
       - id: BoxSurvival
 
-#This should be temporary, at least until briefcases can spawn in hands.
-
-- type: entity
-  noSpawn: true
-  parent: ClothingBackpack
-  id: ClothingBackpackBriefcaseFilled
-  components:
-  - type: StorageFill
-    contents:
-      - id: BoxSurvival
-      - id: BriefcaseBrownFilled
-
 - type: entity
   noSpawn: true
   parent: ClothingBackpackClown
@@ -140,3 +128,86 @@
       - id: CigPackBlack
       - id: HandLabeler
       - id: BoxForensicPad
+
+# ERT
+
+- type: entity
+  noSpawn: true
+  parent: ClothingBackpackERTLeader
+  id: ClothingBackpackERTLeaderFilled
+  components:
+    - type: StorageFill
+      contents:
+        - id: BoxSurvival
+        - id: WeaponPulsePistol
+        - id: WeaponPistolMk58
+        - id: MagazinePistolHighCapacityRubber
+        - id: MagazinePistol
+        - id: Handcuffs
+
+
+- type: entity
+  noSpawn: true
+  parent: ClothingBackpackERTSecurity
+  id: ClothingBackpackERTSecurityFilled
+  components:
+    - type: StorageFill
+      contents:
+        - id: BoxSurvival
+        - id: WeaponDisabler
+        - id: WeaponPulsePistol
+        - id: WeaponPulseCarbine
+        - id: BoxHandcuff
+        - id: Handcuffs
+
+- type: entity
+  noSpawn: true
+  parent: ClothingBackpackERTMedical
+  id: ClothingBackpackERTMedicalFilled
+  components:
+    - type: StorageFill
+      contents:
+        - id: BoxSurvival
+        - id: WeaponPulseCarbine
+        - id: Hypospray
+        - id: MedkitAdvancedFilled
+
+
+- type: entity
+  noSpawn: true
+  parent: ClothingBackpackERTEngineer
+  id: ClothingBackpackERTEngineerFilled
+  components:
+    - type: StorageFill
+      contents:
+        - id: BoxSurvival
+        - id: trayScanner
+        - id: WeaponPulseCarbine
+        - id: RCD
+        - id: RCDAmmo
+        - id: RCDAmmo
+        - id: RCDAmmo
+
+- type: entity
+  noSpawn: true
+  parent: ClothingBackpackERTJanitor
+  id: ClothingBackpackERTJanitorFilled
+  components:
+    - type: StorageFill
+      contents:
+        - id: BoxSurvival
+        - id: WeaponPulsePistol
+        - id: MedkitFilled
+        - id: BoxLightMixed
+        - id: BoxLightMixed
+        - id: Soap
+
+- type: entity
+  noSpawn: true
+  parent: ClothingBackpackSalvage
+  id: ClothingBackpackSalvageFilled
+  components:
+    - type: StorageFill
+      contents:
+        - id: BoxSurvival
+

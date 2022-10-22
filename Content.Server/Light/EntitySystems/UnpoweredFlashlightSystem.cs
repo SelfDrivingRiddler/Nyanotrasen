@@ -1,5 +1,6 @@
 using Content.Server.Light.Components;
 using Content.Server.Light.Events;
+using Content.Server.Mind.Components;
 using Content.Shared.Actions;
 using Content.Shared.Light;
 using Content.Shared.Toggleable;
@@ -21,6 +22,7 @@ namespace Content.Server.Light.EntitySystems
             SubscribeLocalEvent<UnpoweredFlashlightComponent, GetVerbsEvent<ActivationVerb>>(AddToggleLightVerbs);
             SubscribeLocalEvent<UnpoweredFlashlightComponent, GetItemActionsEvent>(OnGetActions);
             SubscribeLocalEvent<UnpoweredFlashlightComponent, ToggleActionEvent>(OnToggleAction);
+            SubscribeLocalEvent<UnpoweredFlashlightComponent, MindAddedMessage>(OnMindAdded);
         }
 
         private void OnToggleAction(EntityUid uid, UnpoweredFlashlightComponent component, ToggleActionEvent args)
@@ -52,6 +54,10 @@ namespace Content.Server.Light.EntitySystems
             args.Verbs.Add(verb);
         }
 
+        private void OnMindAdded(EntityUid uid, UnpoweredFlashlightComponent component, MindAddedMessage args)
+        {
+            _actionsSystem.AddAction(uid, component.ToggleAction, null);
+        }
         public void ToggleLight(UnpoweredFlashlightComponent flashlight)
         {
             if (!EntityManager.TryGetComponent(flashlight.Owner, out PointLightComponent? light))
@@ -63,9 +69,9 @@ namespace Content.Server.Light.EntitySystems
             if (EntityManager.TryGetComponent(flashlight.Owner, out AppearanceComponent? appearance))
                 appearance.SetData(UnpoweredFlashlightVisuals.LightOn, flashlight.LightOn);
 
-            SoundSystem.Play(Filter.Pvs(light.Owner), flashlight.ToggleSound.GetSound(), flashlight.Owner);
+            SoundSystem.Play(flashlight.ToggleSound.GetSound(), Filter.Pvs(light.Owner), flashlight.Owner);
 
-            RaiseLocalEvent(flashlight.Owner, new LightToggleEvent(flashlight.LightOn));
+            RaiseLocalEvent(flashlight.Owner, new LightToggleEvent(flashlight.LightOn), true);
             _actionsSystem.SetToggled(flashlight.ToggleAction, flashlight.LightOn);
         }
     }

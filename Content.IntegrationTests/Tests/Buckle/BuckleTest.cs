@@ -17,7 +17,7 @@ namespace Content.IntegrationTests.Tests.Buckle
     [TestFixture]
     [TestOf(typeof(BuckleComponent))]
     [TestOf(typeof(StrapComponent))]
-    public sealed class BuckleTest : ContentIntegrationTest
+    public sealed class BuckleTest
     {
         private const string BuckleDummyId = "BuckleDummy";
         private const string StrapDummyId = "StrapDummy";
@@ -51,9 +51,15 @@ namespace Content.IntegrationTests.Tests.Buckle
         [Test]
         public async Task BuckleUnbuckleCooldownRangeTest()
         {
-            var cOptions = new ClientIntegrationOptions {ExtraPrototypes = Prototypes};
-            var sOptions = new ServerIntegrationOptions {ExtraPrototypes = Prototypes};
-            var (_, server) = await StartConnectedServerClientPair(cOptions, sOptions);
+            await using var pairTracker = await PoolManager.GetServerClient(new PoolSettings{ExtraPrototypes = Prototypes});
+            var server = pairTracker.Pair.Server;
+
+            var testMap = await PoolManager.CreateTestMap(pairTracker);
+            var coordinates = testMap.GridCoords;
+            var entityManager = server.ResolveDependency<IEntityManager>();
+            var actionBlocker = entityManager.EntitySysManager.GetEntitySystem<ActionBlockerSystem>();
+            var standingState = entityManager.EntitySysManager.GetEntitySystem<StandingStateSystem>();
+
 
             EntityUid human = default;
             EntityUid chair = default;
@@ -62,15 +68,6 @@ namespace Content.IntegrationTests.Tests.Buckle
 
             await server.WaitAssertion(() =>
             {
-                var mapManager = IoCManager.Resolve<IMapManager>();
-                var entityManager = IoCManager.Resolve<IEntityManager>();
-
-                var actionBlocker = EntitySystem.Get<ActionBlockerSystem>();
-                var standingState = EntitySystem.Get<StandingStateSystem>();
-
-                var grid = GetMainGrid(mapManager);
-                var coordinates = new EntityCoordinates(grid.GridEntityId, 0, 0);
-
                 human = entityManager.SpawnEntity(BuckleDummyId, coordinates);
                 chair = entityManager.SpawnEntity(StrapDummyId, coordinates);
 
@@ -120,9 +117,6 @@ namespace Content.IntegrationTests.Tests.Buckle
 
             await server.WaitAssertion(() =>
             {
-                var actionBlocker = EntitySystem.Get<ActionBlockerSystem>();
-                var standingState = EntitySystem.Get<StandingStateSystem>();
-
                 // Still buckled
                 Assert.True(buckle.Buckled);
 
@@ -156,10 +150,6 @@ namespace Content.IntegrationTests.Tests.Buckle
 
             await server.WaitAssertion(() =>
             {
-                var entityManager = IoCManager.Resolve<IEntityManager>();
-                var actionBlocker = EntitySystem.Get<ActionBlockerSystem>();
-                var standingState = EntitySystem.Get<StandingStateSystem>();
-
                 // Still buckled
                 Assert.True(buckle.Buckled);
 
@@ -209,13 +199,18 @@ namespace Content.IntegrationTests.Tests.Buckle
                 Assert.Null(buckle.BuckledTo);
                 Assert.IsEmpty(strap.BuckledEntities);
             });
+
+            await pairTracker.CleanReturnAsync();
         }
 
         [Test]
         public async Task BuckledDyingDropItemsTest()
         {
-            var options = new ServerContentIntegrationOption {ExtraPrototypes = Prototypes};
-            var server = StartServer(options);
+            await using var pairTracker = await PoolManager.GetServerClient(new PoolSettings{NoClient = true, ExtraPrototypes = Prototypes});
+            var server = pairTracker.Pair.Server;
+
+            var testMap = await PoolManager.CreateTestMap(pairTracker);
+            var coordinates = testMap.GridCoords;
 
             EntityUid human = default;
             BuckleComponent buckle = null;
@@ -224,14 +219,11 @@ namespace Content.IntegrationTests.Tests.Buckle
 
             await server.WaitIdleAsync();
 
+            var entityManager = server.ResolveDependency<IEntityManager>();
+            var handsSys = entityManager.EntitySysManager.GetEntitySystem<SharedHandsSystem>();
+
             await server.WaitAssertion(() =>
             {
-                var mapManager = IoCManager.Resolve<IMapManager>();
-                var entityManager = IoCManager.Resolve<IEntityManager>();
-
-                var grid = GetMainGrid(mapManager);
-                var coordinates = new EntityCoordinates(grid.GridEntityId, 0, 0);
-
                 human = entityManager.SpawnEntity(BuckleDummyId, coordinates);
                 var chair = entityManager.SpawnEntity(StrapDummyId, coordinates);
 
@@ -251,7 +243,7 @@ namespace Content.IntegrationTests.Tests.Buckle
                 {
                     var akms = entityManager.SpawnEntity(ItemDummyId, coordinates);
 
-                    Assert.True(EntitySystem.Get<SharedHandsSystem>().TryPickupAnyHand(human, akms));
+                    Assert.True(handsSys.TryPickupAnyHand(human, akms));
                 }
             });
 
@@ -265,7 +257,7 @@ namespace Content.IntegrationTests.Tests.Buckle
                 // With items in all hands
                 foreach (var hand in hands.Hands.Values)
                 {
-                    Assert.NotNull(hands.ActiveHandEntity);
+                    Assert.NotNull(hand.HeldEntity);
                 }
 
                 var legs = body.GetPartsOfType(BodyPartType.Leg);
@@ -287,21 +279,24 @@ namespace Content.IntegrationTests.Tests.Buckle
                 // Now with no item in any hand
                 foreach (var hand in hands.Hands.Values)
                 {
-                    Assert.Null(hands.ActiveHandEntity);
+                    Assert.Null(hand.HeldEntity);
                 }
 
                 buckle.TryUnbuckle(human, true);
             });
+
+            await pairTracker.CleanReturnAsync();
         }
 
         [Test]
         public async Task ForceUnbuckleBuckleTest()
         {
-            var options = new ServerContentIntegrationOption
-            {
-                ExtraPrototypes = Prototypes
-            };
-            var server = StartServer(options);
+            await using var pairTracker = await PoolManager.GetServerClient(new PoolSettings{NoClient = true, ExtraPrototypes = Prototypes});
+            var server = pairTracker.Pair.Server;
+
+            var testMap = await PoolManager.CreateTestMap(pairTracker);
+            var coordinates = testMap.GridCoords;
+            var entityManager = server.ResolveDependency<IEntityManager>();
 
             EntityUid human = default;
             EntityUid chair = default;
@@ -309,12 +304,6 @@ namespace Content.IntegrationTests.Tests.Buckle
 
             await server.WaitAssertion(() =>
             {
-                var mapManager = IoCManager.Resolve<IMapManager>();
-                var entityManager = IoCManager.Resolve<IEntityManager>();
-
-                var grid = GetMainGrid(mapManager);
-                var coordinates = new EntityCoordinates(grid.GridEntityId, 0, 0);
-
                 human = entityManager.SpawnEntity(BuckleDummyId, coordinates);
                 chair = entityManager.SpawnEntity(StrapDummyId, coordinates);
 
@@ -331,14 +320,12 @@ namespace Content.IntegrationTests.Tests.Buckle
                 entityManager.GetComponent<TransformComponent>(human).WorldPosition += (100, 0);
             });
 
-            await WaitUntil(server, () => !buckle.Buckled, 10);
+            await PoolManager.WaitUntil(server, () => !buckle.Buckled, 10);
 
             Assert.False(buckle.Buckled);
 
             await server.WaitAssertion(() =>
             {
-                var entityManager = IoCManager.Resolve<IEntityManager>();
-
                 // Move the now unbuckled entity back onto the chair
                 entityManager.GetComponent<TransformComponent>(human).WorldPosition -= (100, 0);
 
@@ -356,6 +343,7 @@ namespace Content.IntegrationTests.Tests.Buckle
                 Assert.NotNull(buckle.BuckledTo);
                 Assert.True(buckle.Buckled);
             });
+            await pairTracker.CleanReturnAsync();
         }
     }
 }

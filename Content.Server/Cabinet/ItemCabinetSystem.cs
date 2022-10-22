@@ -1,3 +1,4 @@
+using Content.Server.Storage.Components;
 using Content.Shared.Audio;
 using Content.Shared.Cabinet;
 using Content.Shared.Containers.ItemSlots;
@@ -67,6 +68,9 @@ namespace Content.Server.Cabinet
             if (args.Hands == null || !args.CanAccess || !args.CanInteract)
                 return;
 
+            if (TryComp<LockComponent>(uid, out var lockComponent) && lockComponent.Locked)
+                return;
+
             // Toggle open verb
             ActivationVerb toggleVerb = new();
             toggleVerb.Act = () => ToggleItemCabinet(uid, cabinet);
@@ -100,8 +104,11 @@ namespace Content.Server.Cabinet
             if (!Resolve(uid, ref cabinet))
                 return;
 
+            if (TryComp<LockComponent>(uid, out var lockComponent) && lockComponent.Locked)
+                return;
+
             cabinet.Opened = !cabinet.Opened;
-            SoundSystem.Play(Filter.Pvs(uid), cabinet.DoorSound.GetSound(), uid, AudioHelpers.WithVariation(0.15f));
+            SoundSystem.Play(cabinet.DoorSound.GetSound(), Filter.Pvs(uid), uid, AudioHelpers.WithVariation(0.15f));
             _itemSlotsSystem.SetLock(uid, cabinet.CabinetSlot, !cabinet.Opened);
 
             UpdateAppearance(uid, cabinet);

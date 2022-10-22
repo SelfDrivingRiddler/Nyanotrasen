@@ -1,5 +1,5 @@
 using Content.Shared.Damage;
-using Content.Shared.Sound;
+using Robust.Shared.Audio;
 
 namespace Content.Server.Damage.Components
 {
@@ -12,7 +12,7 @@ namespace Content.Server.Damage.Components
         [DataField("minimumSpeed")]
         public float MinimumSpeed { get; set; } = 20f;
         [DataField("factor")]
-        public float Factor { get; set; } = 1f;
+        public float Factor { get; set; } = 0.5f;
         [DataField("soundHit", required: true)]
         public SoundSpecifier SoundHit { get; set; } = default!;
         [DataField("stunChance")]

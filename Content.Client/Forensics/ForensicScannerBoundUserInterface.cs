@@ -7,7 +7,7 @@ namespace Content.Client.Forensics
     {
         private ForensicScannerMenu? _window;
 
-        public ForensicScannerBoundUserInterface(ClientUserInterfaceComponent owner, object uiKey) : base(owner, uiKey)
+        public ForensicScannerBoundUserInterface(ClientUserInterfaceComponent owner, Enum uiKey) : base(owner, uiKey)
         {
         }
 
@@ -16,18 +16,25 @@ namespace Content.Client.Forensics
             base.Open();
             _window = new ForensicScannerMenu();
             _window.OnClose += Close;
+            _window.Print.OnPressed += _ => Print();
             _window.OpenCentered();
+        }
+
+        private void Print()
+        {
+            SendMessage(new ForensicScannerPrintMessage());
+            _window?.Close();
         }
 
         protected override void ReceiveMessage(BoundUserInterfaceMessage message)
         {
-          if (_window == null)
-            return;
+            if (_window == null)
+                return;
 
-          if (message is not ForensicScannerUserMessage cast)
-            return;
+            if (message is not ForensicScannerUserMessage cast)
+                return;
 
-          _window.Populate(cast);
+            _window.Populate(cast);
         }
     }
 }

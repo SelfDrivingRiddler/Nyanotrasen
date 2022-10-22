@@ -1,11 +1,16 @@
 using Content.Server.Power.Components;
 using Content.Shared.Examine;
 using Content.Shared.Power;
+using Content.Shared.Verbs;
+using Robust.Server.GameObjects;
+using Robust.Shared.Audio;
 
 namespace Content.Server.Power.EntitySystems
 {
     public sealed class PowerReceiverSystem : EntitySystem
     {
+        [Dependency] private readonly AppearanceSystem _appearance = default!;
+        [Dependency] private readonly AudioSystem _audio = default!;
         public override void Initialize()
         {
             base.Initialize();
@@ -17,6 +22,8 @@ namespace Content.Server.Power.EntitySystems
             SubscribeLocalEvent<ApcPowerProviderComponent, ComponentShutdown>(OnProviderShutdown);
             SubscribeLocalEvent<ApcPowerProviderComponent, ExtensionCableSystem.ReceiverConnectedEvent>(OnReceiverConnected);
             SubscribeLocalEvent<ApcPowerProviderComponent, ExtensionCableSystem.ReceiverDisconnectedEvent>(OnReceiverDisconnected);
+
+            SubscribeLocalEvent<PowerSwitchComponent, GetVerbsEvent<AlternativeVerb>>(AddSwitchPowerVerb);
         }
 
         ///<summary>
@@ -25,8 +32,9 @@ namespace Content.Server.Power.EntitySystems
         private void OnExamined(EntityUid uid, ApcPowerReceiverComponent component, ExaminedEvent args)
         {
             args.PushMarkup(Loc.GetString("power-receiver-component-on-examine-main",
-                                            ("stateText", Loc.GetString( component.Powered ? "power-receiver-component-on-examine-powered" :
-                                                                                   "power-receiver-component-on-examine-unpowered"))));
+                                            ("stateText", Loc.GetString( component.Powered
+                                                ? "power-receiver-component-on-examine-powered"
+                                                : "power-receiver-component-on-examine-unpowered"))));
         }
 
         private void OnProviderShutdown(EntityUid uid, ApcPowerProviderComponent component, ComponentShutdown args)
@@ -60,7 +68,7 @@ namespace Content.Server.Power.EntitySystems
 
         private void OnReceiverConnected(EntityUid uid, ApcPowerProviderComponent provider, ExtensionCableSystem.ReceiverConnectedEvent args)
         {
-            if (EntityManager.TryGetComponent(args.Receiver.Owner, out ApcPowerReceiverComponent receiver))
+            if (EntityManager.TryGetComponent(args.Receiver.Owner, out ApcPowerReceiverComponent? receiver))
             {
                 provider.AddReceiver(receiver);
             }
@@ -68,20 +76,83 @@ namespace Content.Server.Power.EntitySystems
 
         private void OnReceiverDisconnected(EntityUid uid, ApcPowerProviderComponent provider, ExtensionCableSystem.ReceiverDisconnectedEvent args)
         {
-            if (EntityManager.TryGetComponent(args.Receiver.Owner, out ApcPowerReceiverComponent receiver))
+            if (EntityManager.TryGetComponent(args.Receiver.Owner, out ApcPowerReceiverComponent? receiver))
             {
                 provider.RemoveReceiver(receiver);
             }
         }
 
+        private void AddSwitchPowerVerb(EntityUid uid, PowerSwitchComponent component, GetVerbsEvent<AlternativeVerb> args)
+        {
+            if(!args.CanAccess || !args.CanInteract)
+                return;
+
+            if (!TryComp<ApcPowerReceiverComponent>(uid, out var receiver))
+                return;
+
+            if (!receiver.NeedsPower)
+                return;
+
+            AlternativeVerb verb = new()
+            {
+                Act = () =>
+                {
+                    TogglePower(uid);
+                },
+                IconTexture = "/Textures/Interface/VerbIcons/Spare/poweronoff.svg.192dpi.png",
+                Text = Loc.GetString("power-switch-component-toggle-verb"),
+                Priority = -3
+            };
+            args.Verbs.Add(verb);
+        }
+
         private void ProviderChanged(ApcPowerReceiverComponent receiver)
         {
             receiver.NetworkLoad.LinkedNetwork = default;
+            var ev = new PowerChangedEvent(receiver.Powered, receiver.NetworkLoad.ReceivingPower);
 
-            RaiseLocalEvent(receiver.Owner, new PowerChangedEvent(receiver.Powered, receiver.NetworkLoad.ReceivingPower));
+            RaiseLocalEvent(receiver.Owner, ref ev);
+            _appearance.SetData(receiver.Owner, PowerDeviceVisuals.Powered, receiver.Powered);
+        }
 
-            if (TryComp(receiver.Owner, out AppearanceComponent? appearance))
-                appearance.SetData(PowerDeviceVisuals.Powered, receiver.Powered);
+        /// <summary>
+        /// If this takes power, it returns whether it has power.
+        /// Otherwise, it returns 'true' because if something doesn't take power
+        /// it's effectively always powered.
+        /// </summary>
+        public bool IsPowered(EntityUid uid, ApcPowerReceiverComponent? receiver = null)
+        {
+            if (!Resolve(uid, ref receiver, false))
+                return true;
+
+            return receiver.Powered;
+        }
+
+        /// <summary>
+        /// Turn this machine on or off.
+        /// Returns true if we turned it on, false if we turned it off.
+        /// </summary>
+        public bool TogglePower(EntityUid uid, bool playSwitchSound = true, ApcPowerReceiverComponent? receiver = null)
+        {
+            if (!Resolve(uid, ref receiver, false))
+                return true;
+
+            // it'll save a lot of confusion if 'always powered' means 'always powered'
+            if (!receiver.NeedsPower)
+            {
+                receiver.PowerDisabled = false;
+                return true;
+            }
+
+            receiver.PowerDisabled = !receiver.PowerDisabled;
+
+            if (playSwitchSound)
+            {
+                _audio.PlayPvs(new SoundPathSpecifier("/Audio/Machines/machine_switch.ogg"), uid,
+                    AudioParams.Default.WithVolume(-2f));
+            }
+
+            return !receiver.PowerDisabled; // i.e. PowerEnabled
         }
     }
 }

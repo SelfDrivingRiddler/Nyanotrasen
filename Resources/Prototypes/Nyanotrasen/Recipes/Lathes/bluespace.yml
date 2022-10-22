@@ -6,9 +6,9 @@
   result: QSI
   completetime: 5
   materials:
-    Bluespace: 200
-    Glass: 500
-    Plastic: 500
+    Bluespace: 25
+    Glass: 250
+    Plastic: 250
 
 - type: latheRecipe
   id: BluespaceBeaker
@@ -21,18 +21,6 @@
     Bluespace: 100
     Glass: 500
     Plastic: 500
-
-- type: latheRecipe
-  id: ShrinkRay
-  icon:
-    sprite: Nyanotrasen/Objects/Weapons/Guns/Battery/decloner.rsi
-    state: icon
-  result: LockboxShrinkRay
-  completetime: 4
-  materials:
-    Bluespace: 400
-    Steel: 400
-    Glass: 400
 
 - type: latheRecipe
   id: BackpackOfHolding
@@ -81,3 +69,25 @@
     Bluespace: 200
     Durathread: 750
     Plastic: 200
+
+- type: latheRecipe
+  id: BluespaceCrystal
+  icon:
+    sprite: Nyanotrasen/Objects/Materials/materials.rsi
+    state: bluespace
+  result: MaterialBluespace
+  completetime: 4
+  materials:
+    Bluespace: 100
+
+- type: latheRecipe
+  id: NormalityCrystal
+  icon:
+    sprite: Nyanotrasen/Objects/Materials/materials.rsi
+    state: bluespace
+  result: CrystalNormality
+  completetime: 4
+  materials:
+    Bluespace: 100
+    Plasma: 100
+    Gold: 25

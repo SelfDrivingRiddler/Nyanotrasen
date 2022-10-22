@@ -5,10 +5,15 @@
   id: FoodMeatBase
   abstract: true
   components:
+  - type: FlavorProfile
+    flavors:
+      - meaty
   - type: Food
   - type: Sprite
     sprite: Objects/Consumable/Food/meat.rsi
     netsync: false
+  - type: Extractable
+    grindableSolutionName: food
   - type: SolutionContainerManager
     solutions:
       food:
@@ -16,7 +21,7 @@
         reagents:
         - ReagentId: Nutriment
           Quantity: 5
-        - ReagentId: Toxin
+        - ReagentId: UncookedAnimalProteins
           Quantity: 1
   - type: Item
     size: 5
@@ -47,11 +52,38 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 9
   - type: SliceableFood
     count: 3
     slice: FoodMeatCutlet
+
+- type: entity
+  name: raw carp fillet
+  parent: FoodMeatBase
+  # MeatFish?...
+  id: FoodMeatFish
+  description: Your last words being "Wow, exotic!" are not worth it. The taste itself though? Maybe.
+  components:
+  - type: FlavorProfile
+    flavors:
+      - fishy
+  - type: Tag
+    tags:
+    - Raw
+  - type: Sprite
+    state: fish
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        reagents:
+        - ReagentId: CarpoToxin
+          Quantity: 5
+  - type: Extractable
+    juiceSolution:
+      reagents:
+      - ReagentId: CarpoToxin
+        Quantity: 5
 
 - type: entity
   name: raw bacon
@@ -63,18 +95,20 @@
     tags:
     - Raw
   - type: Sprite
-    netsync: true
+    netsync: false
     state: bacon
-  - type: RandomSpriteState
-    spriteStates:
-    - bacon
-    - bacon2
+  - type: RandomSprite
+    available:
+      - enum.DamageStateVisualLayers.Base:
+          bacon: ""
+      - enum.DamageStateVisualLayers.Base:
+          bacon2: ""
   - type: SolutionContainerManager
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 2
 
 - type: entity
   name: raw bear meat
@@ -91,8 +125,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 9
   - type: SliceableFood
     count: 3
     slice: FoodMeatBearCutlet
@@ -112,8 +146,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 9
   - type: SliceableFood
     count: 3
     slice: FoodMeatPenguinCutletSlice
@@ -133,8 +167,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 9
   - type: SliceableFood
     count: 3
     slice: FoodMeatChickenCutlet
@@ -154,8 +188,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 9
   - type: SliceableFood
     count: 3
     slice: FoodMeatDuckCutlet
@@ -177,6 +211,8 @@
         reagents:
         - ReagentId: Bicaridine
           Quantity: 20
+  - type: StaticPrice
+    price: 750
 
 - type: entity
   name: raw crab meat
@@ -193,7 +229,7 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
+        - ReagentId: UncookedAnimalProteins
           Quantity: 1
 
 - type: entity
@@ -211,8 +247,52 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
+        - ReagentId: UncookedAnimalProteins
           Quantity: 5
+
+- type: entity
+  name: dragon flesh
+  parent: FoodMeatBase
+  id: FoodMeatDragon
+  description: The dense meat of the space-era apex predator is oozing with it's mythical ichor. Ironically, best eaten raw.
+  components:
+  - type: Tag
+    tags:
+    - Raw
+  - type: Sprite
+    layers:
+    - state: dragon
+    - state: dragon_veins
+      shader: unshaded
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        reagents:
+        - ReagentId: Ichor
+          Quantity: 2
+  - type: Extractable
+    juiceSolution:
+      reagents:
+      - ReagentId: Ichor
+        Quantity: 2
+
+- type: entity
+  name: raw rat meat
+  parent: FoodMeatBase
+  id: FoodMeatRat
+  description: Prime meat from maintenance!
+  components:
+  - type: Tag
+    tags:
+    - Raw
+  - type: Sprite
+    state: plain
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        reagents:
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw lizard meat
@@ -229,8 +309,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 9
   - type: SliceableFood
     count: 3
     slice: FoodMeatLizardCutlet
@@ -259,7 +339,7 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
+        - ReagentId: UncookedAnimalProteins
           Quantity: 20
 
 - type: entity
@@ -277,8 +357,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 20
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 9
   - type: SliceableFood
     count: 3
     slice: FoodMeatSpiderCutlet
@@ -298,7 +378,7 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
+        - ReagentId: UncookedAnimalProteins
           Quantity: 10
 
 - type: entity
@@ -316,7 +396,7 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
+        - ReagentId: UncookedAnimalProteins
           Quantity: 1
 
 - type: entity
@@ -325,6 +405,10 @@
   id: FoodMeatXeno
   description: A slab of xeno meat, dripping with acid.
   components:
+  - type: FlavorProfile
+    flavors:
+      - meaty
+      - acidic
   - type: Tag
     tags:
     - Raw
@@ -372,6 +456,10 @@
   id: FoodMeatClown
   description: A delicious, round piece of meat clown. How horrifying.
   components:
+  - type: FlavorProfile
+    flavors:
+      - meaty
+      - funny
   - type: Tag
     tags:
     - Raw
@@ -398,6 +486,9 @@
   id: FoodMeatSlime
   description: A gelatinous shaping of slime jelly.
   components:
+  - type: FlavorProfile
+    flavors:
+      - slimy
   - type: Tag
     tags:
     - Raw
@@ -449,11 +540,13 @@
     layers:
     - state: plate-meat
     - state: bacon-cooked
-  - type: RandomSpriteState
-    spriteLayer: 1
-    spriteStates:
-    - bacon-cooked
-    - bacon2-cooked
+      map: [ "enum.DamageStateVisualLayers.Base" ]
+  - type: RandomSprite
+    available:
+      - enum.DamageStateVisualLayers.Base:
+          bacon-cooked: ""
+      - enum.DamageStateVisualLayers.Base:
+          bacon2-cooked: ""
   - type: SolutionContainerManager
     solutions:
       food:
@@ -556,12 +649,16 @@
   - type: Food
     trash: FoodPlateSmall
   - type: Sprite
-    netsync: true
-    state: chicken-fried
-  - type: RandomSpriteState
-    spriteStates:
-    - chicken-fried
-    - chicken2-fried
+    netsync: false
+    layers:
+    - state: chicken-fried
+      map: [ "enum.DamageStateVisualLayers.Base" ]
+  - type: RandomSprite
+    available:
+      - enum.DamageStateVisualLayers.Base:
+          chicken-fried: ""
+      - enum.DamageStateVisualLayers.Base:
+          chicken2-fried: ""
   - type: SolutionContainerManager
     solutions:
       food:
@@ -643,7 +740,7 @@
         reagents:
         - ReagentId: Nutriment
           Quantity: 5
-        - reagentId: Protein
+        - ReagentId: Protein
           Quantity: 5
 
 - type: entity
@@ -737,8 +834,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw bear cutlet
@@ -759,8 +856,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw penguin cutlet
@@ -779,8 +876,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw chicken cutlet
@@ -799,8 +896,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw duck cutlet
@@ -819,8 +916,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw lizard cutlet
@@ -842,8 +939,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 1
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw spider cutlet
@@ -865,8 +962,8 @@
     solutions:
       food:
         reagents:
-        - ReagentId: Toxin
-          Quantity: 20
+        - ReagentId: UncookedAnimalProteins
+          Quantity: 3
 
 - type: entity
   name: raw xeno cutlet
@@ -874,6 +971,10 @@
   id: FoodMeatXenoCutlet
   description: A slab of raw xeno meat, dripping with acid.
   components:
+  - type: FlavorProfile
+    flavors:
+      - meaty
+      - acidic
   - type: Tag
     tags:
     - Raw

@@ -11,11 +11,17 @@
     damage:
       types:
         Blunt: 22
+    soundHit:
+      path: /Audio/Weapons/club.ogg
+    bluntStaminaDamageFactor: 1.25
   - type: Wieldable
   - type: IncreaseDamageOnWield
-    modifiers:
-      flatReductions:
-        Blunt: -8
-  - type: Item
-    size: 20
+    damage:
+      types:
+        Blunt: 8
+  - type: Clothing
+    size: 150
     sprite: Nyanotrasen/Objects/Weapons/Melee/kanabou.rsi
+    quickEquip: false
+    slots:
+    - back

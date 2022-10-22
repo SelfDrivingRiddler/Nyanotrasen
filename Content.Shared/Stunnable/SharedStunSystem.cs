@@ -5,8 +5,9 @@ using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory.Events;
 using Content.Shared.Item;
-using Content.Shared.Movement;
-using Content.Shared.Movement.EntitySystems;
+using Content.Shared.Bed.Sleep;
+using Content.Shared.Movement.Events;
+using Content.Shared.Movement.Systems;
 using Content.Shared.Standing;
 using Content.Shared.StatusEffect;
 using Content.Shared.Throwing;
@@ -24,14 +25,22 @@ namespace Content.Shared.Stunnable
         [Dependency] private readonly StandingStateSystem _standingStateSystem = default!;
         [Dependency] private readonly StatusEffectsSystem _statusEffectSystem = default!;
         [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
+        [Dependency] private readonly SharedAudioSystem _audio = default!;
+
+        /// <summary>
+        /// Friction modifier for knocked down players.
+        /// Doesn't make them faster but makes them slow down... slower.
+        /// </summary>
+        public const float KnockDownModifier = 0.4f;
 
         public override void Initialize()
         {
             SubscribeLocalEvent<KnockedDownComponent, ComponentInit>(OnKnockInit);
-            SubscribeLocalEvent<KnockedDownComponent, ComponentRemove>(OnKnockRemove);
+            SubscribeLocalEvent<KnockedDownComponent, ComponentShutdown>(OnKnockShutdown);
+            SubscribeLocalEvent<KnockedDownComponent, StandAttemptEvent>(OnStandAttempt);
 
             SubscribeLocalEvent<SlowedDownComponent, ComponentInit>(OnSlowInit);
-            SubscribeLocalEvent<SlowedDownComponent, ComponentRemove>(OnSlowRemove);
+            SubscribeLocalEvent<SlowedDownComponent, ComponentShutdown>(OnSlowRemove);
 
             SubscribeLocalEvent<StunnedComponent, ComponentStartup>(UpdateCanMove);
             SubscribeLocalEvent<StunnedComponent, ComponentShutdown>(UpdateCanMove);
@@ -45,6 +54,8 @@ namespace Content.Shared.Stunnable
             // helping people up if they're knocked down
             SubscribeLocalEvent<KnockedDownComponent, InteractHandEvent>(OnInteractHand);
             SubscribeLocalEvent<SlowedDownComponent, RefreshMovementSpeedModifiersEvent>(OnRefreshMovespeed);
+
+            SubscribeLocalEvent<KnockedDownComponent, TileFrictionEvent>(OnKnockedTileFriction);
 
             // Attempt event subscriptions.
             SubscribeLocalEvent<StunnedComponent, UpdateCanMoveEvent>(OnMoveAttempt);
@@ -95,9 +106,15 @@ namespace Content.Shared.Stunnable
             _standingStateSystem.Down(uid);
         }
 
-        private void OnKnockRemove(EntityUid uid, KnockedDownComponent component, ComponentRemove args)
+        private void OnKnockShutdown(EntityUid uid, KnockedDownComponent component, ComponentShutdown args)
         {
             _standingStateSystem.Stand(uid);
+        }
+
+        private void OnStandAttempt(EntityUid uid, KnockedDownComponent component, StandAttemptEvent args)
+        {
+            if (component.LifeStage <= ComponentLifeStage.Running)
+                args.Cancel();
         }
 
         private void OnSlowInit(EntityUid uid, SlowedDownComponent component, ComponentInit args)
@@ -105,8 +122,10 @@ namespace Content.Shared.Stunnable
             _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
         }
 
-        private void OnSlowRemove(EntityUid uid, SlowedDownComponent component, ComponentRemove args)
+        private void OnSlowRemove(EntityUid uid, SlowedDownComponent component, ComponentShutdown args)
         {
+            component.SprintSpeedModifier = 1f;
+            component.WalkSpeedModifier = 1f;
             _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
         }
 
@@ -195,16 +214,23 @@ namespace Content.Shared.Stunnable
             if (args.Handled || knocked.HelpTimer > 0f)
                 return;
 
+            // TODO: This should be an event.
+            if (HasComp<SleepingComponent>(uid))
+                return;
+
             // Set it to half the help interval so helping is actually useful...
             knocked.HelpTimer = knocked.HelpInterval/2f;
 
             _statusEffectSystem.TryRemoveTime(uid, "KnockedDown", TimeSpan.FromSeconds(knocked.HelpInterval));
-
-            SoundSystem.Play(Filter.Pvs(uid), knocked.StunAttemptSound.GetSound(), uid, AudioHelpers.WithVariation(0.05f));
-
-            knocked.Dirty();
+            _audio.PlayPredicted(knocked.StunAttemptSound, uid, args.User);
+            Dirty(knocked);
 
             args.Handled = true;
+        }
+
+        private void OnKnockedTileFriction(EntityUid uid, KnockedDownComponent component, ref TileFrictionEvent args)
+        {
+            args.Modifier *= KnockDownModifier;
         }
 
         #region Attempt Event Handling

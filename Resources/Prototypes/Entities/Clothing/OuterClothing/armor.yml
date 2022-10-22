@@ -37,7 +37,7 @@
         Heat: 0.9
 
 - type: entity
-  parent: ClothingOuterBase
+  parent: ClothingOuterBaseLarge
   id: ClothingOuterArmorCult
   name: acolyte armor
   description: An evil-looking piece of cult armor, made of bones.
@@ -55,7 +55,7 @@
         Heat: 0.5
 
 - type: entity
-  parent: ClothingOuterBase
+  parent: ClothingOuterBaseLarge
   id: ClothingOuterArmorHeavy
   name: heavy armor suit
   description: A heavily armored suit that protects against excessive damage.
@@ -72,6 +72,9 @@
         Piercing: 0.2
         Heat: 0.5
         Radiation: 0
+  - type: Tag
+    tags:
+      - FullBodyOuter
 
 - type: entity
   parent: ClothingOuterArmorHeavy
@@ -118,8 +121,8 @@
     sprite: Clothing/OuterClothing/Armor/magusred.rsi
 
 - type: entity
-  parent: ClothingOuterBase
-  id: ClothingOuterArmorRiot
+  parent: ClothingOuterBaseLarge
+  id: ClothingOuterArmorRiot #needs lamia sprite
   name: riot suit
   description: An armored vest with heavy padding to protect against melee attacks, perfect for fighting delinquents around the station.
   components:
@@ -135,12 +138,12 @@
         Piercing: 0.9
         Heat: 0.9
   - type: ExplosionResistance
-    resistance: 0.9
+    damageCoefficient: 0.9
 
 - type: entity
-  parent: ClothingOuterBase
+  parent: ClothingOuterBaseLarge
   id: ClothingOuterArmorScaf
-  name: scaf suit
+  name: scaf suit #needs lamia sprite
   description: A green and brown tactical suit for combat situations.
   components:
   - type: Sprite
@@ -155,10 +158,10 @@
         Piercing: 0.4
         Heat: 0.9
   - type: ExplosionResistance
-    resistance: 0.8
+    damageCoefficient: 0.8
 
 - type: entity
-  parent: ClothingOuterBase
+  parent: ClothingOuterBaseLarge
   id: ClothingOuterArmorCaptainCarapace
   name: "captain's carapace"
   description: "An armored chestpiece that provides protection whilst still offering maximum mobility and flexibility. Issued only to the station's finest."
@@ -175,10 +178,10 @@
         Piercing: 0.6
         Heat: 0.5
   - type: ExplosionResistance
-    resistance: 0.65
-    
+    damageCoefficient: 0.65
+
 - type: entity
-  parent: ClothingOuterBase
+  parent: ClothingOuterBaseLarge
   id: ClothingOuterArmorChangeling
   name: chitinous armor
   description: Inflates the changeling's body into an all-consuming chitinous mass of armor.
@@ -197,6 +200,9 @@
         Radiation: 0.8
   - type: ClothingSpeedModifier
     walkModifier: 0.7
-    sprintModifier: 0.65 
+    sprintModifier: 0.65
   - type: ExplosionResistance
-    resistance: 0.5
+    damageCoefficient: 0.5
+  - type: Tag
+    tags:
+      - FullBodyOuter

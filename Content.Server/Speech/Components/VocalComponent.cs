@@ -1,6 +1,5 @@
 using Content.Shared.Actions;
 using Content.Shared.Actions.ActionTypes;
-using Content.Shared.Sound;
 using Robust.Shared.Audio;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 
@@ -17,6 +16,9 @@ public sealed class VocalComponent : Component
 
     [DataField("femaleScream")]
     public SoundSpecifier FemaleScream = new SoundCollectionSpecifier("FemaleScreams");
+
+    [DataField("unsexedScream")]
+    public SoundSpecifier UnsexedScream = new SoundCollectionSpecifier("MaleScreams");
 
     [DataField("wilhelm")]
     public SoundSpecifier Wilhelm = new SoundPathSpecifier("/Audio/Voice/Human/wilhelm_scream.ogg");

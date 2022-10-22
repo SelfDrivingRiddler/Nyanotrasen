@@ -14,14 +14,13 @@
   - type: Clickable
   - type: Physics
     bodyType: Static
-    fixedRotation: false
   - type: Fixtures
     fixtures:
     - shape:
         # Using a circle here makes it a lot easier to pull it all the way from Cargo
         !type:PhysShapeCircle
           radius: 0.45
-      mass: 25
+      density: 190
       # Keep an eye on ParticlesProjectile when adjusting these
       mask:
       - MachineMask

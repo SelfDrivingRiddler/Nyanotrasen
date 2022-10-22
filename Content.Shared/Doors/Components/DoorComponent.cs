@@ -1,6 +1,6 @@
 using Content.Shared.Damage;
-using Content.Shared.Sound;
 using Content.Shared.Tools;
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -61,6 +61,12 @@ public sealed class DoorComponent : Component, ISerializationHooks
 
     [DataField("emagDuration")]
     public readonly TimeSpan EmagDuration = TimeSpan.FromSeconds(0.8f);
+
+    /// <summary>
+    ///     Pry modifier for a powered door.
+    /// </summary>
+    [DataField("poweredPryModifier")]
+    public readonly float PoweredPryModifier = 2.5f;
 
     /// <summary>
     ///     When the door is active, this is the time when the state will next update.
@@ -169,9 +175,6 @@ public sealed class DoorComponent : Component, ISerializationHooks
     }
     #endregion
 
-    [DataField("board", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
-    public string? BoardPrototype;
-
     [DataField("pryingQuality", customTypeSerializer: typeof(PrototypeIdSerializer<ToolQualityPrototype>))]
     public string PryingQuality = "Prying";
 
@@ -231,6 +234,7 @@ public enum DoorVisuals
     Powered,
     BoltLights,
     EmergencyLights,
+    ClosedLights,
     BaseRSI,
 }
 

@@ -17,35 +17,22 @@ namespace Content.Server.Pointing.EntitySystems
         [Dependency] private readonly IRobustRandom _random = default!;
         [Dependency] private readonly ExplosionSystem _explosion = default!;
 
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            SubscribeLocalEvent<RoguePointingArrowComponent, ComponentStartup>(OnStartup);
-        }
-
-        private void OnStartup(EntityUid uid, RoguePointingArrowComponent component, ComponentStartup args)
-        {
-            if (EntityManager.TryGetComponent(uid, out SpriteComponent? sprite))
-            {
-                sprite.DrawDepth = (int) DrawDepth.Overlays;
-            }
-        }
-
         private EntityUid? RandomNearbyPlayer(EntityUid uid, RoguePointingArrowComponent? component = null, TransformComponent? transform = null)
         {
             if (!Resolve(uid, ref component, ref transform))
                 return null;
 
-            var players = Filter.Empty()
-                .AddPlayersByPvs(transform.MapPosition)
-                .RemoveWhereAttachedEntity(euid => !EntityManager.TryGetComponent(euid, out MobStateComponent? mobStateComponent) || mobStateComponent.IsDead())
-                .Recipients
-                .ToArray();
+            var targets = EntityQuery<PointingArrowAngeringComponent>().ToList();
 
-            return players.Length != 0
-                ? _random.Pick(players).AttachedEntity
-                : null;
+            if (targets.Count == 0)
+                return null;
+
+            var angering = _random.Pick(targets);
+            angering.RemainingAnger -= 1;
+            if (angering.RemainingAnger <= 0)
+                RemComp<PointingArrowAngeringComponent>(uid);
+
+            return angering.Owner;
         }
 
         private void UpdateAppearance(EntityUid uid, RoguePointingArrowComponent? component = null, TransformComponent? transform = null, AppearanceComponent? appearance = null)
@@ -56,6 +43,14 @@ namespace Content.Server.Pointing.EntitySystems
             appearance.SetData(RoguePointingArrowVisuals.Rotation, transform.LocalRotation.Degrees);
         }
 
+        public void SetTarget(EntityUid arrow, EntityUid target, RoguePointingArrowComponent? component = null)
+        {
+            if (!Resolve(arrow, ref component))
+                throw new ArgumentException("Input was not a rogue pointing arrow!", nameof(arrow));
+
+            component.Chasing = target;
+        }
+
         public override void Update(float frameTime)
         {
             foreach (var (component, transform) in EntityManager.EntityQuery<RoguePointingArrowComponent, TransformComponent>())
@@ -63,10 +58,10 @@ namespace Content.Server.Pointing.EntitySystems
                 var uid = component.Owner;
                 component.Chasing ??= RandomNearbyPlayer(uid, component, transform);
 
-                if (component.Chasing is not {Valid: true} chasing)
+                if (component.Chasing is not {Valid: true} chasing || Deleted(chasing))
                 {
                     EntityManager.QueueDeleteEntity(uid);
-                    return;
+                    continue;
                 }
 
                 component.TurningDelay -= frameTime;
@@ -78,10 +73,10 @@ namespace Content.Server.Pointing.EntitySystems
                     var adjusted = angle.Degrees + 90;
                     var newAngle = Angle.FromDegrees(adjusted);
 
-                    transform.LocalRotation = newAngle;
+                    transform.WorldRotation = newAngle;
 
                     UpdateAppearance(uid, component, transform);
-                    return;
+                    continue;
                 }
 
                 transform.WorldRotation += Angle.FromDegrees(20);
@@ -96,8 +91,10 @@ namespace Content.Server.Pointing.EntitySystems
 
                 if (component.ChasingTime > 0)
                 {
-                    return;
+                    continue;
                 }
+
+
                 _explosion.QueueExplosion(uid, ExplosionSystem.DefaultExplosionPrototypeId, 50, 3, 10);
                 EntityManager.QueueDeleteEntity(uid);
             }

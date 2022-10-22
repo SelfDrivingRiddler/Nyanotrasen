@@ -1,8 +1,8 @@
 - type: entity
   parent: Protolathe
   id: ScienceTechFab
-  name: science techfab
-  description: Prints equipment for use by the research department.
+  name: epistemics techfab
+  description: Prints equipment for use by the epistemics department.
   components:
   - type: Sprite
     netsync: false
@@ -18,21 +18,88 @@
       map: ["enum.LatheVisualLayers.IsInserting"]
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
-  - type: LatheVisuals
+  - type: Lathe
     idleState: icon
     runningState: icon
-  - type: ProtolatheDatabase
-    protolatherecipes:
+    dynamicRecipes:
       - QSI
       - BluespaceBeaker
       - Decloner
-      - ShrinkRay
       - CryostasisBeaker
       - ShockCollar
+      - InsulativeHeadcage
       - BackpackOfHolding
       - SatchelOfHolding
       - DuffelbagOfHolding
+      - ProximitySensor
+      - LeftArmBorg
+      - RightArmBorg
+      - NormalityCrystal
       - ChemicalPayload #Below = shared
+      - FlashlightLantern
+      - Bucket
+      - MopItem
+      - SprayBottle
+      - FireExtinguisher
+      - LightTube
+      - LightBulb
+      - SheetSteel
+      - SheetGlass1
+      - SheetRGlass
+      - SheetPlastic
+      - BluespaceCrystal
+      - CableStack
+      - CableMVStack
+      - CableHVStack
+  - type: MaterialStorage
+    whitelist:
+      tags:
+        - Sheet
+        - RawMaterial
+        - Ingot
+    materialWhiteList:
+    - Bluespace
+    - Glass
+    - Plastic
+    - Steel
+    - Durathread
+
+- type: entity
+  parent: Protolathe
+  id: ServiceTechFab
+  name: service techfab
+  description: Prints equipment for service staff.
+  components:
+  - type: Sprite
+    netsync: false
+    sprite: Structures/Machines/techfab.rsi
+    layers:
+    - state: icon
+      map: ["enum.LatheVisualLayers.IsRunning"]
+    - state: service
+    - state: unlit
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: inserting
+      map: ["enum.LatheVisualLayers.IsInserting"]
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+  - type: Lathe
+    idleState: icon
+    runningState: icon
+    dynamicRecipes:
+      - KitchenKnife
+      - ButchCleaver
+      - LightReplacer
+      - Holoprojector
+      - TrashBagOfHolding
+      - MopAdvanced
+      - HydroponicsToolScythe
+      - HydroponicsToolHatchet
+      - DrinkMug
+      - DrinkMugMetal
+      - DrinkGlass
+      - Shovel # Below is shared with other lathes
       - FlashlightLantern
       - Bucket
       - MopItem
@@ -47,3 +114,79 @@
       - CableStack
       - CableMVStack
       - CableHVStack
+  - type: MaterialStorage
+    whitelist:
+      tags:
+        - Sheet
+        - RawMaterial
+        - Ingot
+    materialWhiteList:
+    - Steel
+    - Plastic
+    - Glass
+    - Bluespace
+    - Durathread
+    - Wood
+
+- type: entity
+  parent: Protolathe
+  id: EngineeringTechFab
+  name: engineering techfab
+  description: Prints equipment for engineers.
+  components:
+  - type: Sprite
+    netsync: false
+    sprite: Structures/Machines/techfab.rsi
+    layers:
+    - state: icon
+      map: ["enum.LatheVisualLayers.IsRunning"]
+    - state: eng
+    - state: unlit
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: inserting
+      map: ["enum.LatheVisualLayers.IsInserting"]
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+  - type: Lathe
+    idleState: icon
+    runningState: icon
+    dynamicRecipes:
+      - Flash
+      - MicroManipulatorStockPart
+      - ScanningModuleStockPart
+      - MicroLaserStockPart
+      - MatterBinStockPart
+      - CapacitorStockPart
+      - FirelockElectronics
+      - DoorElectronics
+      - APCElectronics
+      - AirAlarmElectronics
+      - FireAlarmElectronics
+      - HolofanProjector
+      - Drone
+      - RCDAmmo # Below is shared with other lathes
+      - FlashlightLantern
+      - Bucket
+      - MopItem
+      - SprayBottle
+      - FireExtinguisher
+      - LightTube
+      - LightBulb
+      - SheetSteel
+      - SheetGlass1
+      - SheetRGlass
+      - SheetPlastic
+      - CableStack
+      - CableMVStack
+      - CableHVStack
+  - type: MaterialStorage
+    whitelist:
+      tags:
+        - Sheet
+        - RawMaterial
+        - Ingot
+    materialWhiteList:
+    - Glass
+    - Plastic
+    - Steel

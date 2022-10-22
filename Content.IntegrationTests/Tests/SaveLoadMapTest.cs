@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Server.Maps;
 using Robust.Shared.ContentPack;
@@ -11,24 +11,21 @@ using Robust.Shared.Utility;
 namespace Content.IntegrationTests.Tests
 {
     [TestFixture]
-    sealed class SaveLoadMapTest : ContentIntegrationTest
+    sealed class SaveLoadMapTest
     {
         [Test]
         public async Task SaveLoadMultiGridMap()
         {
             const string mapPath = @"/Maps/Test/TestMap.yml";
 
-            var server = StartServer(new ServerContentIntegrationOption
-            {
-                FailureLogLevel = LogLevel.Error
-            });
-            await server.WaitIdleAsync();
+            await using var pairTracker = await PoolManager.GetServerClient(new PoolSettings{NoClient = true});
+            var server = pairTracker.Pair.Server;
             var mapLoader = server.ResolveDependency<IMapLoader>();
             var mapManager = server.ResolveDependency<IMapManager>();
             var sEntities = server.ResolveDependency<IEntityManager>();
             var resManager = server.ResolveDependency<IResourceManager>();
 
-            server.Post(() =>
+            await server.WaitPost(() =>
             {
                 var dir = new ResourcePath(mapPath).Directory;
                 resManager.UserData.CreateDir(dir);
@@ -48,15 +45,15 @@ namespace Content.IntegrationTests.Tests
                     mapGrid.SetTile(new Vector2i(0, 0), new Tile(2, (TileRenderFlag)1, 254));
                 }
 
-                mapLoader.SaveMap(mapId, mapPath);
-
-                mapManager.DeleteMap(mapId);
+                Assert.Multiple(() => mapLoader.SaveMap(mapId, mapPath));
+                Assert.Multiple(() => mapManager.DeleteMap(mapId));
             });
             await server.WaitIdleAsync();
 
-            server.Post(() =>
+            await server.WaitPost(() =>
             {
-                mapLoader.LoadMap(new MapId(10), mapPath);
+                Assert.Multiple(() => mapLoader.LoadMap(new MapId(10), mapPath));
+                
             });
             await server.WaitIdleAsync();
             await server.WaitAssertion(() =>
@@ -77,7 +74,7 @@ namespace Content.IntegrationTests.Tests
                     Assert.That(mapGrid.GetTileRef(new Vector2i(0, 0)).Tile, Is.EqualTo(new Tile(2, (TileRenderFlag)1, 254)));
                 }
             });
-
+            await pairTracker.CleanReturnAsync();
         }
     }
 }

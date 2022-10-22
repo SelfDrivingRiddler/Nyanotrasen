@@ -1,12 +1,7 @@
-using System;
 using Content.Client.Chat.Managers;
-using Content.Client.Viewport;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Content.Client.Chat.UI
@@ -46,7 +41,10 @@ namespace Content.Client.Chat.UI
         public float VerticalOffset { get; set; }
         private float _verticalOffsetAchieved;
 
-        public float ContentHeight { get; private set; }
+        public Vector2 ContentSize { get; private set; }
+
+        // man down
+        public event Action<EntityUid, SpeechBubble>? OnDied;
 
         public static SpeechBubble CreateSpeechBubble(SpeechType type, string text, EntityUid senderEntity, IEyeManager eyeManager, IChatManager chatManager, IEntityManager entityManager)
         {
@@ -83,8 +81,8 @@ namespace Content.Client.Chat.UI
             ForceRunStyleUpdate();
 
             bubble.Measure(Vector2.Infinity);
-            ContentHeight = bubble.DesiredSize.Y;
-            _verticalOffsetAchieved = -ContentHeight;
+            ContentSize = bubble.DesiredSize;
+            _verticalOffsetAchieved = -ContentSize.Y;
         }
 
         protected abstract Control BuildBubble(string text, string speechStyleClass);
@@ -128,17 +126,16 @@ namespace Content.Client.Chat.UI
                 Modulate = Color.White;
             }
 
-            var worldPos = xform.WorldPosition;
-            var scale = _eyeManager.MainViewport.GetRenderScale();
-            var offset = new Vector2(0, EntityVerticalOffset * EyeManager.PixelsPerMeter * scale);
-            var lowerCenter = (_eyeManager.WorldToScreen(worldPos) - offset) / UIScale;
+            var offset = (-_eyeManager.CurrentEye.Rotation).ToWorldVec() * -EntityVerticalOffset;
+            var worldPos = xform.WorldPosition + offset;
 
-            var screenPos = lowerCenter - (Width / 2, ContentHeight + _verticalOffsetAchieved);
+            var lowerCenter = _eyeManager.WorldToScreen(worldPos) / UIScale;
+            var screenPos = lowerCenter - (ContentSize.X / 2, ContentSize.Y + _verticalOffsetAchieved);
             // Round to nearest 0.5
             screenPos = (screenPos * 2).Rounded() / 2;
             LayoutContainer.SetPosition(this, screenPos);
 
-            var height = MathF.Ceiling(MathHelper.Clamp(lowerCenter.Y - screenPos.Y, 0, ContentHeight));
+            var height = MathF.Ceiling(MathHelper.Clamp(lowerCenter.Y - screenPos.Y, 0, ContentSize.Y));
             SetHeight = height;
         }
 
@@ -149,7 +146,7 @@ namespace Content.Client.Chat.UI
                 return;
             }
 
-            _chatManager.RemoveSpeechBubble(_senderEntity, this);
+            OnDied?.Invoke(_senderEntity, this);
         }
 
         /// <summary>
@@ -165,7 +162,6 @@ namespace Content.Client.Chat.UI
     }
 
     public sealed class TextSpeechBubble : SpeechBubble
-
     {
         public TextSpeechBubble(string text, EntityUid senderEntity, IEyeManager eyeManager, IChatManager chatManager, IEntityManager entityManager, string speechStyleClass)
             : base(text, senderEntity, eyeManager, chatManager, entityManager, speechStyleClass)

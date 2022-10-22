@@ -1,6 +1,8 @@
 using Content.Shared.DragDrop;
 using Content.Shared.Interaction;
+using Content.Shared.Standing;
 using Robust.Shared.GameStates;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.Buckle.Components
@@ -8,6 +10,8 @@ namespace Content.Shared.Buckle.Components
     [NetworkedComponent()]
     public abstract class SharedBuckleComponent : Component, IDraggable
     {
+        [Dependency] protected readonly IEntityManager EntMan = default!;
+
         /// <summary>
         ///     The range from which this entity can buckle to a <see cref="SharedStrapComponent"/>.
         /// </summary>
@@ -35,15 +39,45 @@ namespace Content.Shared.Buckle.Components
         {
             return TryBuckle(args.User, args.Target);
         }
+
+        /// <summary>
+        ///     Reattaches this entity to the strap, modifying its position and rotation.
+        /// </summary>
+        /// <param name="strap">The strap to reattach to.</param>
+        public void ReAttach(SharedStrapComponent strap)
+        {
+            var ownTransform = EntMan.GetComponent<TransformComponent>(Owner);
+            var strapTransform = EntMan.GetComponent<TransformComponent>(strap.Owner);
+
+            ownTransform.Coordinates = new EntityCoordinates(strapTransform.Owner, strap.BuckleOffset);
+
+            // Buckle subscribes to move for <reasons> so this might fail.
+            // TODO: Make buckle not do that.
+            if (ownTransform.ParentUid != strapTransform.Owner)
+                return;
+
+            ownTransform.LocalRotation = Angle.Zero;
+
+            switch (strap.Position)
+            {
+                case StrapPosition.None:
+                    break;
+                case StrapPosition.Stand:
+                    EntitySystem.Get<StandingStateSystem>().Stand(Owner);
+                    break;
+                case StrapPosition.Down:
+                    EntitySystem.Get<StandingStateSystem>().Down(Owner, false, false);
+                    break;
+            }
+        }
     }
 
     [Serializable, NetSerializable]
     public sealed class BuckleComponentState : ComponentState
     {
-        public BuckleComponentState(bool buckled, int? drawDepth, EntityUid? lastEntityBuckledTo, bool dontCollide)
+        public BuckleComponentState(bool buckled, EntityUid? lastEntityBuckledTo, bool dontCollide)
         {
             Buckled = buckled;
-            DrawDepth = drawDepth;
             LastEntityBuckledTo = lastEntityBuckledTo;
             DontCollide = dontCollide;
         }
@@ -51,7 +85,6 @@ namespace Content.Shared.Buckle.Components
         public bool Buckled { get; }
         public EntityUid? LastEntityBuckledTo { get; }
         public bool DontCollide { get; }
-        public int? DrawDepth;
     }
 
     public sealed class BuckleChangeEvent : EntityEventArgs

@@ -1,0 +1,25 @@
+- type: job
+  id: MailCarrier
+  name: "mail carrier"
+  startingGear: MailCarrierGear
+  playTimeTracker: JobMailCarrier
+  icon: "MailCarrier"
+  supervisors: "the head of personnel"
+  access:
+  - Cargo
+  - Maintenance
+  - Mail
+
+- type: startingGear
+  id: MailCarrierGear
+  equipment:
+    head: ClothingHeadMailCarrier
+    jumpsuit: ClothingUniformMailCarrier
+    back: ClothingBackpackFilled
+    shoes: ClothingShoesColorBlack
+    id: MailCarrierPDA
+    ears: ClothingHeadsetCargo
+    belt: MailBag
+  innerclothingskirt: ClothingUniformMailCarrier
+  satchel: ClothingBackpackSatchelFilled
+  duffelbag: ClothingBackpackDuffelFilled

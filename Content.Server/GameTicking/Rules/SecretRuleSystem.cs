@@ -1,5 +1,6 @@
 using System.Linq;
 using Content.Server.GameTicking.Presets;
+using Content.Server.GameTicking.Rules.Configurations;
 using Content.Shared.Random;
 using Content.Shared.Random.Helpers;
 using Robust.Shared.Prototypes;
@@ -36,7 +37,7 @@ public sealed class SecretRuleSystem : GameRuleSystem
 
         foreach (var rule in _prototypeManager.Index<GamePresetPrototype>(preset).Rules)
         {
-            _ticker.AddGameRule(_prototypeManager.Index<GameRulePrototype>(rule));
+            _ticker.StartGameRule(_prototypeManager.Index<GameRulePrototype>(rule));
         }
     }
 }

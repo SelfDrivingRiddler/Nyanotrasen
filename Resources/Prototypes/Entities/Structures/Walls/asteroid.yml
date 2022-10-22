@@ -2,14 +2,13 @@
   id: AsteroidRock
   parent: BaseStructure
   name: asteroid rock
-  description: An asteroid.
+  suffix: Low Ore Yield
+  description: A rocky asteroid.
   components:
   - type: Gatherable
     whitelist:
       tags:
         - Pickaxe
-    loot:
-      Pickaxe: MiningLootTable
   - type: Sprite
     sprite: Structures/Walls/asteroid_rock.rsi
     state: full
@@ -33,11 +32,29 @@
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.5,-0.5,0.5,0.5"
-      mass: 100
+      density: 100
       mask:
       - FullTileMask
       layer:
       - WallLayer
   - type: IconSmooth
-    key: rock
+    key: walls
     base: rock_
+  - type: OreVein
+    oreChance: 0.2
+    oreRarityPrototypeId: RandomOreDistributionStandard
+
+- type: entity
+  id: AsteroidRockMining
+  parent: AsteroidRock
+  name: asteroid rock
+  suffix: higher ore yield
+  description: An asteroid.
+  components:
+  - type: Gatherable
+    whitelist:
+      tags:
+        - Pickaxe
+  - type: OreVein
+    oreChance: 0.33
+    oreRarityPrototypeId: RandomOreDistributionStandard

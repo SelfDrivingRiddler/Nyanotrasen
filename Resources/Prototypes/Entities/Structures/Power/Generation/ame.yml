@@ -8,16 +8,17 @@
   - type: Clickable
   - type: InteractionOutline
   - type: Sprite
+    netsync: false
+    snapCardinals: true
     sprite: Structures/Power/Generation/ame.rsi
     state: control
   - type: Physics
-    fixedRotation: false
   - type: Fixtures
     fixtures:
     - shape:
         !type:PhysShapeAabb
         bounds: "-0.45,-0.45,0.45,0.45"
-      mass: 25
+      density: 190
       mask:
       - FullTileMask
       layer:
@@ -55,8 +56,7 @@
     - key: enum.AMEControllerUiKey.Key
       type: AMEControllerBoundUserInterface
   - type: Appearance
-    visuals:
-    - type: AMEControllerVisualizer
+  - type: AMEControllerVisuals
   - type: NodeContainer
     examinable: true
     nodes:
@@ -70,6 +70,9 @@
 #  - type: ExtensionCableReceiver
   - type: PowerSupplier
     supplyRate: 0
+  - type: ContainerContainer
+    containers:
+      AMEController-fuelJarContainer: !type:ContainerSlot {}
 
 - type: entity
   noSpawn: true
@@ -90,6 +93,7 @@
   - type: Clickable
   - type: InteractionOutline
   - type: Sprite
+    netsync: false
     drawdepth: Walls
     sprite: Structures/Power/Generation/ame.rsi
     state: shield_0
@@ -98,7 +102,7 @@
     fixtures:
     - shape:
         !type:PhysShapeAabb
-      mass: 25
+      density: 190
       mask:
       - FullTileMask
       layer:
@@ -137,8 +141,7 @@
     energy: 0.5
     color: "#00AAFF"
   - type: Appearance
-    visuals:
-    - type: AMEVisualizer
+  - type: AMEShieldingVisuals
   - type: Construction
     graph: AMEShielding
     node: ameShielding

@@ -1,11 +1,11 @@
-﻿using Robust.Shared.GameStates;
+using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.StatusEffect
 {
     [RegisterComponent]
     [NetworkedComponent]
-    [Friend(typeof(StatusEffectsSystem))]
+    [Access(typeof(StatusEffectsSystem))]
     public sealed class StatusEffectsComponent : Component
     {
         [ViewVariables]
@@ -14,7 +14,7 @@ namespace Content.Shared.StatusEffect
         /// <summary>
         ///     A list of status effect IDs to be allowed
         /// </summary>
-        [DataField("allowed", required: true)]
+        [DataField("allowed", required: true), Access(typeof(StatusEffectsSystem), Other = AccessPermissions.ReadExecute)]
         public List<string> AllowedEffects = default!;
     }
 
@@ -52,6 +52,13 @@ namespace Content.Shared.StatusEffect
             Cooldown = cooldown;
             CooldownRefresh = refresh;
             RelevantComponent = relevantComponent;
+        }
+
+        public StatusEffectState(StatusEffectState toCopy)
+        {
+            Cooldown = (toCopy.Cooldown.Item1, toCopy.Cooldown.Item2);
+            CooldownRefresh = toCopy.CooldownRefresh;
+            RelevantComponent = toCopy.RelevantComponent;
         }
     }
 

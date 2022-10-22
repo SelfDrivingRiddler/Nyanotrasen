@@ -1,9 +1,9 @@
+using Content.Server.Humanoid;
 using Content.Server.Speech.Components;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
 using Content.Shared.Actions.ActionTypes;
-using Content.Shared.CharacterAppearance;
-using Content.Shared.CharacterAppearance.Components;
+using Content.Shared.Humanoid;
 using Robust.Shared.Audio;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -67,29 +67,28 @@ public sealed class VocalSystem : EntitySystem
         if (!_blocker.CanSpeak(uid))
             return false;
 
-        // Currently this requires humanoid appearance & doesn't have any sort of fall-back or gender-neutral scream.
-        if (!TryComp(uid, out HumanoidAppearanceComponent? humanoid))
-            return false;
+        var sex = CompOrNull<HumanoidComponent>(uid)?.Sex ?? Sex.Unsexed;
 
         if (_random.Prob(component.WilhelmProbability))
         {
-            SoundSystem.Play(Filter.Pvs(uid), component.Wilhelm.GetSound(), uid, component.AudioParams);
+            SoundSystem.Play(component.Wilhelm.GetSound(), Filter.Pvs(uid), uid, component.AudioParams);
             return true;
         }
 
         var scale = (float) _random.NextGaussian(1, VocalComponent.Variation);
         var pitchedParams = component.AudioParams.WithPitchScale(scale);
 
-        switch (humanoid.Sex)
+        switch (sex)
         {
             case Sex.Male:
-                SoundSystem.Play(Filter.Pvs(uid), component.MaleScream.GetSound(), uid, pitchedParams);
+                SoundSystem.Play(component.MaleScream.GetSound(), Filter.Pvs(uid), uid, pitchedParams);
                 break;
             case Sex.Female:
-                SoundSystem.Play(Filter.Pvs(uid), component.FemaleScream.GetSound(), uid, pitchedParams);
+                SoundSystem.Play(component.FemaleScream.GetSound(), Filter.Pvs(uid), uid, pitchedParams);
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                SoundSystem.Play(component.UnsexedScream.GetSound(), Filter.Pvs(uid), uid, pitchedParams);
+                break;
         }
 
         return true;

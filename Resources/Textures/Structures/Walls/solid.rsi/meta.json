@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "license": "CC-BY-SA-3.0",
-  "copyright": "Taken from https://github.com/discordia-space/CEV-Eris/blob/c34c1b30abf18aa552e19294523924c39e5ea127/icons/turf/wall_masks.dmi and modified.",
+  "license": "CC-BY-NC-SA-3.0",
+  "copyright": "Taken from https://github.com/goonstation/goonstation/blob/77e7dbf9bcc1c1beffa1326000497a3fe23f8142/icons/turf/walls_supernorn_smooth.dmi and modified.",
   "size": {
     "x": 32,
     "y": 32

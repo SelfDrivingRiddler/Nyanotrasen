@@ -7,7 +7,6 @@ using Content.Shared.Bed.Sleep;
 using Content.Shared.Damage;
 using Content.Shared.Examine;
 using Content.Shared.IdentityManagement;
-using Content.Shared.Interaction;
 using Content.Shared.MobState;
 using Content.Shared.MobState.Components;
 using Content.Shared.Slippery;
@@ -27,7 +26,6 @@ namespace Content.Server.Bed.Sleep
         [Dependency] private readonly ActionsSystem _actionsSystem = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly PopupSystem _popupSystem = default!;
-
         [Dependency] private readonly IRobustRandom _robustRandom = default!;
         public override void Initialize()
         {
@@ -38,7 +36,6 @@ namespace Content.Server.Bed.Sleep
             SubscribeLocalEvent<MobStateComponent, WakeActionEvent>(OnWakeAction);
             SubscribeLocalEvent<SleepingComponent, MobStateChangedEvent>(OnMobStateChanged);
             SubscribeLocalEvent<SleepingComponent, GetVerbsEvent<AlternativeVerb>>(AddWakeVerb);
-            SubscribeLocalEvent<SleepingComponent, InteractHandEvent>(OnInteractHand);
             SubscribeLocalEvent<SleepingComponent, ExaminedEvent>(OnExamined);
             SubscribeLocalEvent<SleepingComponent, SlipAttemptEvent>(OnSlip);
             SubscribeLocalEvent<ForcedSleepingComponent, ComponentInit>(OnInit);
@@ -138,17 +135,15 @@ namespace Content.Server.Bed.Sleep
         /// <summary>
         /// When you click on a sleeping person with an empty hand, try to wake them.
         /// </summary>
-        private void OnInteractHand(EntityUid uid, SleepingComponent component, InteractHandEvent args)
+        public void WakeWithHands(EntityUid uid, SleepingComponent component, EntityUid user)
         {
-            args.Handled = true;
-
             var curTime = _gameTiming.CurTime;
             if (curTime < component.CoolDownEnd)
             {
                 return;
             }
 
-            TryWaking(args.Target, user: args.User);
+            TryWaking(uid, user: user);
             component.CoolDownEnd = curTime + component.Cooldown;
         }
 
@@ -178,6 +173,10 @@ namespace Content.Server.Bed.Sleep
             if (!HasComp<MobStateComponent>(uid))
                 return false;
 
+            var tryingToSleepEvent = new TryingToSleepEvent(uid);
+            RaiseLocalEvent(uid, ref tryingToSleepEvent);
+            if (tryingToSleepEvent.Cancelled) return false;
+
             if (_prototypeManager.TryIndex<InstantActionPrototype>("Sleep", out var sleepAction))
                 _actionsSystem.RemoveAction(uid, sleepAction);
 
@@ -195,7 +194,7 @@ namespace Content.Server.Bed.Sleep
                 if (user != null)
                 {
                     SoundSystem.Play("/Audio/Effects/thudswoosh.ogg", Filter.Pvs(uid), uid, AudioHelpers.WithVariation(0.05f, _robustRandom));
-                    _popupSystem.PopupEntity(Loc.GetString("wake-other-failure", ("target", Identity.Entity(uid, EntityManager))), uid, Filter.Entities(user.Value), Shared.Popups.PopupType.SmallCaution);
+                    _popupSystem.PopupEntity(Loc.GetString("wake-other-failure", ("target", Identity.Entity(uid, EntityManager))), uid, user.Value, Shared.Popups.PopupType.SmallCaution);
                 }
                 return false;
             }
@@ -203,7 +202,7 @@ namespace Content.Server.Bed.Sleep
             if (user != null)
             {
                 SoundSystem.Play("/Audio/Effects/thudswoosh.ogg", Filter.Pvs(uid), uid, AudioHelpers.WithVariation(0.05f, _robustRandom));
-                _popupSystem.PopupEntity(Loc.GetString("wake-other-success", ("target", Identity.Entity(uid, EntityManager))), uid, Filter.Entities(user.Value));
+                _popupSystem.PopupEntity(Loc.GetString("wake-other-success", ("target", Identity.Entity(uid, EntityManager))), uid, user.Value);
             }
             RemComp<SleepingComponent>(uid);
             return true;

@@ -76,6 +76,9 @@
   - type: Tag
     tags:
       - FullBodyOuter
+  - type: GroupExamine
+  - type: ClothingGrantComponent
+    tag: HardsuitOn
 
 - type: entity
   abstract: true

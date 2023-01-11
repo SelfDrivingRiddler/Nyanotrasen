@@ -18,6 +18,7 @@ using System.Threading;
 using Content.Shared.Verbs;
 using Robust.Server.GameObjects;
 using Content.Shared.Popups;
+using Content.Shared.Tag;
 
 namespace Content.Server.Chemistry.EntitySystems;
 
@@ -87,6 +88,15 @@ public sealed partial class ChemistrySystem
 
     private void UseInjector(EntityUid target, EntityUid user, InjectorComponent component)
     {
+        if (_entMan.TryGetComponent<TagComponent>(target, out var tag))
+        {
+            if (tag.Tags.Contains("HardsuitOn"))
+            {
+                _popup.PopupEntity(Loc.GetString("injector-component-failure-hardsuit"), target, user, PopupType.MediumCaution);
+                return;
+            }
+        }
+
         // Handle injecting/drawing for solutions
         if (component.ToggleState == SharedInjectorComponent.InjectorToggleMode.Inject)
         {
@@ -105,7 +115,7 @@ public sealed partial class ChemistrySystem
             else
             {
                 _popup.PopupEntity(Loc.GetString("injector-component-cannot-transfer-message",
-                    ("target", Identity.Entity(target, EntityManager))), component.Owner, Filter.Entities(user));
+                    ("target", Identity.Entity(target, EntityManager))), component.Owner, user);
             }
         }
         else if (component.ToggleState == SharedInjectorComponent.InjectorToggleMode.Draw)
@@ -125,7 +135,7 @@ public sealed partial class ChemistrySystem
             else
             {
                 _popup.PopupEntity(Loc.GetString("injector-component-cannot-draw-message",
-                    ("target", Identity.Entity(target, EntityManager))), component.Owner, Filter.Entities(user));
+                    ("target", Identity.Entity(target, EntityManager))), component.Owner, user);
             }
         }
     }
@@ -226,7 +236,7 @@ public sealed partial class ChemistrySystem
                 throw new ArgumentOutOfRangeException();
         }
 
-        _popup.PopupEntity(Loc.GetString(msg), component.Owner, Filter.Entities(user));
+        _popup.PopupEntity(Loc.GetString(msg), component.Owner, user);
     }
 
     /// <summary>
@@ -235,7 +245,7 @@ public sealed partial class ChemistrySystem
     private void InjectDoAfter(InjectorComponent component, EntityUid user, EntityUid target)
     {
         // Create a pop-up for the user
-        _popup.PopupEntity(Loc.GetString("injector-component-injecting-user"), target, Filter.Entities(user));
+        _popup.PopupEntity(Loc.GetString("injector-component-injecting-user"), target, user);
 
         if (!_solutions.TryGetSolution(component.Owner, InjectorComponent.SolutionName, out var solution))
             return;
@@ -250,7 +260,7 @@ public sealed partial class ChemistrySystem
             // Create a pop-up for the target
             var userName = Identity.Entity(user, EntityManager);
             _popup.PopupEntity(Loc.GetString("injector-component-injecting-target",
-                ("user", userName)), user, Filter.Entities(target));
+                ("user", userName)), user, target);
 
             // Check if the target is incapacitated or in combat mode and modify time accordingly.
             if (_mobState.IsIncapacitated(target))
@@ -311,7 +321,7 @@ public sealed partial class ChemistrySystem
         if (realTransferAmount <= 0)
         {
             _popup.PopupEntity(Loc.GetString("injector-component-cannot-inject-message", ("target", Identity.Entity(targetBloodstream.Owner, EntityManager))),
-                component.Owner, Filter.Entities(user));
+                component.Owner, user);
             return;
         }
 
@@ -324,7 +334,7 @@ public sealed partial class ChemistrySystem
 
         _popup.PopupEntity(Loc.GetString("injector-component-inject-success-message",
                 ("amount", removedSolution.TotalVolume),
-                ("target", Identity.Entity(targetBloodstream.Owner, EntityManager))), component.Owner, Filter.Entities(user));
+                ("target", Identity.Entity(targetBloodstream.Owner, EntityManager))), component.Owner, user);
 
         Dirty(component);
         AfterInject(component);
@@ -344,7 +354,7 @@ public sealed partial class ChemistrySystem
         if (realTransferAmount <= 0)
         {
             _popup.PopupEntity(Loc.GetString("injector-component-target-already-full-message", ("target", Identity.Entity(targetEntity, EntityManager))),
-                component.Owner, Filter.Entities(user));
+                component.Owner, user);
             return;
         }
 
@@ -364,7 +374,7 @@ public sealed partial class ChemistrySystem
 
         _popup.PopupEntity(Loc.GetString("injector-component-transfer-success-message",
                 ("amount", removedSolution.TotalVolume),
-                ("target", Identity.Entity(targetEntity, EntityManager))), component.Owner, Filter.Entities(user));
+                ("target", Identity.Entity(targetEntity, EntityManager))), component.Owner, user);
 
         Dirty(component);
         AfterInject(component);
@@ -404,7 +414,7 @@ public sealed partial class ChemistrySystem
         if (realTransferAmount <= 0)
         {
             _popup.PopupEntity(Loc.GetString("injector-component-target-is-empty-message", ("target", Identity.Entity(targetEntity, EntityManager))),
-                component.Owner, Filter.Entities(user));
+                component.Owner, user);
             return;
         }
 
@@ -425,7 +435,7 @@ public sealed partial class ChemistrySystem
 
         _popup.PopupEntity(Loc.GetString("injector-component-draw-success-message",
                 ("amount", removedSolution.TotalVolume),
-                ("target", Identity.Entity(targetEntity, EntityManager))), component.Owner, Filter.Entities(user));
+                ("target", Identity.Entity(targetEntity, EntityManager))), component.Owner, user);
 
         Dirty(component);
         AfterDraw(component);
@@ -450,7 +460,7 @@ public sealed partial class ChemistrySystem
 
         _popup.PopupEntity(Loc.GetString("injector-component-draw-success-message",
                 ("amount", transferAmount),
-                ("target", Identity.Entity(target, EntityManager))), component.Owner, Filter.Entities(user));
+                ("target", Identity.Entity(target, EntityManager))), component.Owner, user);
 
         Dirty(component);
         AfterDraw(component);

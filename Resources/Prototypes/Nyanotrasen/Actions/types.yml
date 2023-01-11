@@ -20,7 +20,7 @@
   icon: Nyanotrasen/Interface/VerbIcons/dispel.png
   useDelay: 45
   checkCanAccess: false
-  range: 8
+  range: 6
   canTargetSelf: false
   serverEvent: !type:DispelPowerActionEvent
 
@@ -115,7 +115,8 @@
   description: action-description-pyrokinesis
   icon: Nyanotrasen/Interface/VerbIcons/pyrokinesis.png
   useDelay: 50
-  range: 8
+  checkCanAccess: false
+  range: 6
   serverEvent: !type:PyrokinesisPowerActionEvent
 
 - type: worldTargetAction
@@ -139,4 +140,5 @@
   name: hairball-action
   description: hairball-action-desc
   charges: 1
+  useDelay: 30
   serverEvent: !type:HairballActionEvent

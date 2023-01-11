@@ -7,11 +7,11 @@ using Content.Shared.Borgs;
 using Content.Shared.Dataset;
 using Content.Shared.MobState;
 using Content.Shared.Administration.Logs;
+using Content.Shared.Humanoid;
 using Content.Server.Borgs;
 using Content.Server.Speech;
 using Content.Server.Abilities.Psionics;
 using Content.Server.Players;
-using Content.Server.Humanoid;
 using Robust.Shared.Random;
 using Robust.Server.GameObjects;
 using Robust.Shared.Prototypes;
@@ -168,7 +168,7 @@ namespace Content.Server.Soul
                 }
 
                 _laws.ClearLaws(uid, laws);
-                _laws.AddLaw(uid, Loc.GetString("golem-law", ("master", master)), laws);
+                _laws.AddLaw(uid, Loc.GetString("golem-law", ("master", master)), component: laws);
             }
 
             actor.PlayerSession.ContentData()?.Mind?.TransferTo(uid);

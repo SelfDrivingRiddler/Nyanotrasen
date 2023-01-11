@@ -15,7 +15,7 @@
       shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
     - state: inserting
-      map: ["enum.LatheVisualLayers.IsInserting"]
+      map: ["enum.MaterialStorageVisualLayers.Inserting"]
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   - type: Machine
@@ -52,6 +52,7 @@
       - CableStack
       - CableMVStack
       - CableHVStack
+      - NodeScanner
   - type: MaterialStorage
     whitelist:
       tags:
@@ -82,7 +83,7 @@
       shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
     - state: inserting
-      map: ["enum.LatheVisualLayers.IsInserting"]
+      map: ["enum.MaterialStorageVisualLayers.Inserting"]
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   - type: Machine
@@ -151,7 +152,7 @@
       shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
     - state: inserting
-      map: ["enum.LatheVisualLayers.IsInserting"]
+      map: ["enum.MaterialStorageVisualLayers.Inserting"]
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   - type: Machine
@@ -176,10 +177,14 @@
       - APCElectronics
       - AirAlarmElectronics
       - FireAlarmElectronics
+      - MailingUnitElectronics
+      - IntercomElectronics
       - HolofanProjector
       - Drone
       - ConveyorBeltAssembly
       - RPED
+      - PowerDrill
+      - MiningDrill
       - RCDAmmo # Below is shared with other lathes
       - FlashlightLantern
       - Bucket

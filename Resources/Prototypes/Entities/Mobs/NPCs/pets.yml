@@ -132,6 +132,9 @@
   - type: Grammar
     attributes:
       gender: male
+  - type: Faction
+    factions:
+    - Pet
 
 - type: entity
   name: bingus
@@ -186,9 +189,12 @@
   - type: Grammar
     attributes:
       gender: epicene
+  - type: Faction
+    factions:
+    - Pet
 
 - type: entity
-  name: mcgriff
+  name: McGriff
   parent: SimpleMobBase
   id: MobMcGriff
   description: This dog can tell something smells around here, and that something is CRIME!
@@ -244,6 +250,9 @@
       proper: true
       gender: male
   - type: DogVision
+  - type: Faction
+    factions:
+    - Pet
 
 - type: entity
   name: Paperwork
@@ -278,6 +287,9 @@
     attributes:
       proper: true
       gender: male
+  - type: Faction
+    factions:
+    - Pet
 
 - type: entity
   name: Walter
@@ -336,6 +348,9 @@
       proper: true
       gender: male
   - type: DogVision
+  - type: Faction
+    factions:
+    - Pet
 
 - type: entity
   name: Morty
@@ -349,6 +364,9 @@
     attributes:
       proper: true
       gender: male
+  - type: Faction
+    factions:
+    - Pet
 
 - type: entity
   name: Morticia
@@ -362,6 +380,22 @@
     attributes:
       proper: true
       gender: female
+  - type: Faction
+    factions:
+    - Pet
+
+- type: entity
+  name: Alexander
+  parent: MobPig
+  id: MobAlexander
+  description: Chef's finest colleague.
+  components:
+  - type: Grammar
+    attributes:
+      gender: male
+  - type: Faction
+    factions:
+    - Pet
 
 - type: entity
   name: Renault
@@ -381,6 +415,7 @@
     attributes:
       proper: true
       gender: female
+
 
 - type: entity
   name: Hamlet
@@ -407,4 +442,3 @@
     attributes:
       proper: true
       gender: male
-

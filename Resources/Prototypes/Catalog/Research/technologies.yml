@@ -58,6 +58,7 @@
   - ButchCleaver
   - KitchenKnife
   - MicrowaveMachineCircuitboard
+  - DeepFryerMachineCircuitboard
 
 - type: technology
   name: technologies-advanced-botany
@@ -112,6 +113,7 @@
   - Dropper
   - Syringe
   - ReagentGrinderMachineCircuitboard
+  - HotplateMachineCircuitboard
   - PillCanister
   - ChemistryEmptyBottle01
   - ChemicalPayload
@@ -164,10 +166,11 @@
   - MedicalMachinery
   - Virology
   unlockedRecipes:
-  - CloningPodMachineCircuitboard
+  - MetempsychoticMachineCircuitboard
   - MedicalScannerMachineCircuitboard
   - StasisBedMachineCircuitboard
   - CloningConsoleComputerCircuitboard
+  - CryoPodMachineCircuitboard
 
 # Security Technology Tree
 
@@ -296,7 +299,7 @@
   - BasicResearch
   unlockedRecipes:
   - AppraisalTool
-#TODO- MiningDrill
+  - MiningDrill
   - OreProcessorMachineCircuitboard
 
 - type: technology
@@ -313,8 +316,28 @@
   unlockedRecipes:
   - ShuttleConsoleCircuitboard
   - RadarConsoleCircuitboard
-#TODO- Gyroscope
-#TODO- Thruster
+  - ThrusterMachineCircuitboard
+  - GyroscopeMachineCircuitboard
+
+- type: technology
+  name: technologies-ripley-technology
+  id: RipleyTechnology
+  description: technologies-ripley-technology-description
+  icon:
+    sprite: Objects/Specific/Mech/mecha.rsi
+    state: ripley
+  requiredPoints: 30000
+  requiredTechnologies:
+  - SalvageEquipment
+  unlockedRecipes:
+  - RipleyCentralElectronics
+  - RipleyPeripheralsElectronics
+  - MechEquipmentGrabber
+  - RipleyHarness
+  - RipleyLArm
+  - RipleyRArm
+  - RipleyLLeg
+  - RipleyRLeg
 
 # Industrial Engineering Technology Tree
 
@@ -329,6 +352,7 @@
   requiredTechnologies:
   - BasicResearch
   unlockedRecipes:
+  - IntercomElectronics
   - ConveyorBeltAssembly
   - FlashlightLantern
   - FireExtinguisher
@@ -397,6 +421,7 @@
   - IndustrialEngineering
   unlockedRecipes:
   - RCDAmmo
+  - PowerDrill
   - SMESMachineCircuitboard
   - PowerComputerCircuitboard
   - GeneratorPlasmaMachineCircuitboard
@@ -522,6 +547,7 @@
   - MicroLaserStockPart
   - MicroManipulatorStockPart
   - ScanningModuleStockPart
+  - NodeScanner
 
 - type: technology
   name: technologies-robotics-technology

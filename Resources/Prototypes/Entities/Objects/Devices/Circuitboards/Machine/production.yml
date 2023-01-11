@@ -73,7 +73,7 @@
   name: circuit imprinter machine board
   components:
   - type: Sprite
-    state: science
+    state: engineering
   - type: MachineBoard
     prototype: CircuitImprinter
     requirements:
@@ -270,6 +270,24 @@
         Cable: 1
 
 - type: entity
+  id: CryoPodMachineCircuitboard
+  parent: BaseMachineCircuitboard
+  name: cryo pod machine board
+  description: A machine printed circuit board for a cryo pod
+  components:
+    - type: Sprite
+      state: medical
+    - type: MachineBoard
+      prototype: CryoPod
+      requirements:
+        ScanningModule: 1
+        Manipulator: 1
+        MatterBin: 2
+      materialRequirements:
+        Glass: 1
+        Cable: 1
+
+- type: entity
   id: ChemMasterMachineCircuitboard
   parent: BaseMachineCircuitboard
   name: ChemMaster 4000 machine board
@@ -451,6 +469,32 @@
         CableHV: 5
 
 - type: entity
+  id: ThrusterMachineCircuitboard
+  parent: BaseMachineCircuitboard
+  name: thruster machine board
+  components:
+  - type: MachineBoard
+    prototype: Thruster
+    requirements:
+      Laser: 4
+      Capacitor: 1
+    materialRequirements:
+      Steel: 5
+
+- type: entity
+  id: GyroscopeMachineCircuitboard
+  parent: BaseMachineCircuitboard
+  name: gyroscope machine board
+  components:
+  - type: MachineBoard
+    prototype: Gyroscope
+    requirements:
+      ScanningModule: 2
+      Capacitor: 1
+    materialRequirements:
+      Glass: 2
+
+- type: entity
   id: GeneratorUraniumMachineCircuitboard
   parent: BaseMachineCircuitboard
   name: generator (uranium) machine board
@@ -481,6 +525,19 @@
           Amount: 1
           DefaultPrototype: Beaker
           ExamineName: Glass Beaker
+
+- type: entity
+  id: HotplateMachineCircuitboard
+  parent: BaseMachineCircuitboard
+  name: hotplate machine board
+  description: A machine printed circuit board for a hotplate
+  components:
+    - type: MachineBoard
+      prototype: ChemistryHotplate
+      requirements:
+        Laser: 2
+      materialRequirements:
+        Steel: 2
 
 - type: entity
   id: StasisBedMachineCircuitboard
@@ -537,6 +594,24 @@
       materialRequirements:
         Glass: 2
         Cable: 2
+
+- type: entity
+  id: DeepFryerMachineCircuitboard
+  parent: BaseMachineCircuitboard
+  name: deep fryer machine board
+  components:
+    - type: Sprite
+      state: service
+    - type: MachineBoard
+      prototype: KitchenDeepFryer
+      requirements:
+        Capacitor: 1
+        Laser: 1
+        MatterBin: 1
+      materialRequirements:
+        Steel: 4
+        Glass: 2
+        Cable: 4
 
 - type: entity
   id: EmitterCircuitboard

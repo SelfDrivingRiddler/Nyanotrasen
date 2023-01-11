@@ -11,7 +11,8 @@ using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.MobState.Components;
 using Content.Shared.Weapons.Melee.Events;
-using Robust.Shared.Player;
+using Content.Shared.Tag;
+using Content.Shared.Popups;
 
 namespace Content.Server.Chemistry.EntitySystems
 {
@@ -67,6 +68,18 @@ namespace Content.Server.Chemistry.EntitySystems
 
             string? msgFormat = null;
 
+            if (!component.PierceArmor && _entMan.TryGetComponent<TagComponent>(target, out var tag))
+            {
+                if (tag.Tags.Contains("HardsuitOn"))
+                {
+                    if (target == null) return false;
+                    var taget = (EntityUid) target;
+
+                    _popup.PopupEntity("You cant get the needle to go through the thick plating!", taget, user, PopupType.MediumCaution);
+                    return false;
+                }
+            }
+
             if (target == user)
                 msgFormat = "hypospray-component-inject-self-message";
             else if (EligibleEntity(user, _entMan) && _interaction.TryRollClumsy(user, component.ClumsyFailChance))
@@ -79,21 +92,21 @@ namespace Content.Server.Chemistry.EntitySystems
 
             if (hypoSpraySolution == null || hypoSpraySolution.CurrentVolume == 0)
             {
-                _popup.PopupCursor(Loc.GetString("hypospray-component-empty-message"), Filter.Entities(user));
+                _popup.PopupCursor(Loc.GetString("hypospray-component-empty-message"), user);
                 return true;
             }
 
             if (!_solutions.TryGetInjectableSolution(target.Value, out var targetSolution))
             {
-                _popup.PopupCursor(Loc.GetString("hypospray-cant-inject", ("target", Identity.Entity(target.Value, _entMan))), Filter.Entities(user));
+                _popup.PopupCursor(Loc.GetString("hypospray-cant-inject", ("target", Identity.Entity(target.Value, _entMan))), user);
                 return false;
             }
 
-            _popup.PopupCursor(Loc.GetString(msgFormat ?? "hypospray-component-inject-other-message", ("other", target)), Filter.Entities(user));
+            _popup.PopupCursor(Loc.GetString(msgFormat ?? "hypospray-component-inject-other-message", ("other", target)), user);
 
             if (target != user)
             {
-                _popup.PopupCursor(Loc.GetString("hypospray-component-feel-prick-message"), Filter.Entities(target.Value));
+                _popup.PopupCursor(Loc.GetString("hypospray-component-feel-prick-message"), target.Value);
                 var meleeSys = EntitySystem.Get<MeleeWeaponSystem>();
                 var angle = Angle.FromWorldVec(_entMan.GetComponent<TransformComponent>(target.Value).WorldPosition - _entMan.GetComponent<TransformComponent>(user).WorldPosition);
                 // TODO: This should just be using melee attacks...
@@ -107,7 +120,7 @@ namespace Content.Server.Chemistry.EntitySystems
 
             if (realTransferAmount <= 0)
             {
-                _popup.PopupCursor(Loc.GetString("hypospray-component-transfer-already-full-message",("owner", target)), Filter.Entities(user));
+                _popup.PopupCursor(Loc.GetString("hypospray-component-transfer-already-full-message",("owner", target)), user);
                 return true;
             }
 

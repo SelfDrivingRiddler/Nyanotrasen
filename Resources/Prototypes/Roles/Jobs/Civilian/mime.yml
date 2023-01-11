@@ -1,6 +1,7 @@
 - type: job
   id: Mime
   name: job-name-mime
+  description: job-description-mime
   playTimeTracker: JobMime
   startingGear: MimeGear
   icon: "Mime"
@@ -13,6 +14,7 @@
   special:
   - !type:AddComponentSpecial
     components:
+    - type: Psionic
     - type: MimePowers
 
 - type: startingGear

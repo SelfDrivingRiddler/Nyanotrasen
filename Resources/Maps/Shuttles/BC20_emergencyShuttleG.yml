@@ -104,7 +104,7 @@ entities:
   components:
   - type: MetaData
   - pos: 0.5104167,0.43224397
-    parent: 2
+    parent: invalid
     type: Transform
   - chunks:
       0,-1:
@@ -142,7 +142,6 @@ entities:
     type: Fixtures
   - gravityShakeSound: !type:SoundPathSpecifier
       path: /Audio/Effects/alert.ogg
-    enabled: True
     type: Gravity
   - chunkCollection:
       -1,-1:
@@ -1730,8 +1729,8 @@ entities:
     - volume: 2500
       temperature: 293.15
       moles:
-      - 21.213781
-      - 79.80423
+      - 19.481253
+      - 73.28662
       - 0
       - 0
       - 0
@@ -1777,15 +1776,10 @@ entities:
   - type: Shuttle
   - type: GridPathfinding
   - type: RadiationGridResistance
-- uid: 2
-  components:
-  - type: MetaData
-  - type: Transform
-  - index: 2
-    type: Map
-  - type: PhysicsMap
-  - type: Broadphase
-  - type: OccluderTree
+  - nextShake: 0
+    shakeTimes: 10
+    type: GravityShake
+  - type: GasTileOverlay
 - uid: 3
   type: LockerSecurityFilled
   components:
@@ -2764,14 +2758,15 @@ entities:
     parent: 1
     type: Transform
 - uid: 164
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: 1.5707963267948966 rad
     pos: 12.5,-18.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49
@@ -2796,14 +2791,15 @@ entities:
       id: docking
     type: Fixtures
 - uid: 165
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: 1.5707963267948966 rad
     pos: 12.5,-16.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49
@@ -3364,7 +3360,7 @@ entities:
     parent: 1
     type: Transform
 - uid: 254
-  type: CloningPod
+  type: MetempsychoticMachine
   components:
   - pos: 1.5,-6.5
     parent: 1
@@ -3757,14 +3753,15 @@ entities:
     type: Transform
   - type: ActiveEmergencyLight
 - uid: 314
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: -1.5707963267948966 rad
     pos: -14.5,-26.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49
@@ -4085,14 +4082,15 @@ entities:
     parent: 1
     type: Transform
 - uid: 360
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: -1.5707963267948966 rad
     pos: -14.5,-24.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49
@@ -6610,14 +6608,15 @@ entities:
     parent: 1
     type: Transform
 - uid: 760
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: -1.5707963267948966 rad
     pos: -14.5,-18.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49
@@ -7006,14 +7005,15 @@ entities:
     parent: 1
     type: Transform
 - uid: 821
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: 1.5707963267948966 rad
     pos: 12.5,-24.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49
@@ -7717,14 +7717,15 @@ entities:
     parent: 1
     type: Transform
 - uid: 930
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: 1.5707963267948966 rad
     pos: 12.5,-26.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49
@@ -10638,14 +10639,15 @@ entities:
     parent: 1
     type: Transform
 - uid: 1353
-  type: AirlockExternalGlassShuttleEmergencyLocked
+  type: AirlockGlassShuttle
   components:
   - rot: -1.5707963267948966 rad
     pos: -14.5,-16.5
     parent: 1
     type: Transform
   - fixtures:
-    - shape: !type:PolygonShape
+    - density: 100
+      shape: !type:PolygonShape
         vertices:
         - 0.49,-0.49
         - 0.49,0.49

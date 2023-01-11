@@ -1,6 +1,7 @@
 - type: job
   id: MedicalDoctor
   name: job-name-doctor
+  description: job-description-doctor
   playTimeTracker: JobMedicalDoctor
   startingGear: DoctorGear
   icon: "MedicalDoctor"
@@ -9,6 +10,10 @@
   - Medical
   - Maintenance
   - Chemistry
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: MedicalTraining
 
 - type: startingGear
   id: DoctorGear

@@ -3,12 +3,12 @@ using System.Linq;
 using Content.Server.GameTicking.Presets;
 using Content.Server.GameTicking.Rules;
 using Content.Server.Ghost.Components;
-using Content.Server.MobState;
 using Content.Shared.CCVar;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Database;
-using Content.Shared.MobState.Components;
+using Content.Shared.Mobs.Components;
+using Content.Shared.Mobs.Systems;
 using Robust.Server.Player;
 
 namespace Content.Server.GameTicking
@@ -16,6 +16,8 @@ namespace Content.Server.GameTicking
     public sealed partial class GameTicker
     {
         public const float PresetFailedCooldownIncrease = 30f;
+
+        [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
 
         public GamePresetPrototype? Preset { get; private set; }
 
@@ -153,7 +155,7 @@ namespace Content.Server.GameTicking
             if (playerEntity != null && viaCommand)
                 _adminLogger.Add(LogType.Mind, $"{EntityManager.ToPrettyString(playerEntity.Value):player} is attempting to ghost via command");
 
-            var handleEv = new GhostAttemptHandleEvent(mind, canReturnGlobal);
+            var handleEv = new GhostAttemptHandleEvent(mind, canReturnGlobal, viaCommand);
             RaiseLocalEvent(handleEv);
 
             // Something else has handled the ghost attempt for us! We return its result.
@@ -193,7 +195,7 @@ namespace Content.Server.GameTicking
 
             if (canReturnGlobal && TryComp(playerEntity, out MobStateComponent? mobState))
             {
-                if (_mobState.IsCritical(playerEntity.Value, mobState))
+                if (_mobStateSystem.IsCritical(playerEntity.Value, mobState))
                 {
                     canReturn = true;
 
@@ -243,11 +245,13 @@ namespace Content.Server.GameTicking
         public Mind.Mind Mind { get; }
         public bool CanReturnGlobal { get; }
         public bool Result { get; set; }
+        public bool ViaCommand { get; set; }
 
-        public GhostAttemptHandleEvent(Mind.Mind mind, bool canReturnGlobal)
+        public GhostAttemptHandleEvent(Mind.Mind mind, bool canReturnGlobal, bool viaCommand)
         {
             Mind = mind;
             CanReturnGlobal = canReturnGlobal;
+            ViaCommand = viaCommand;
         }
     }
 }

@@ -1408,6 +1408,23 @@
 
 - type: entity
   parent: DrinkGlassBase
+  id: DrinkPoscaGlass
+  name: posca glass
+  description: Poor warriors' drink from a forgotten era.
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      drink:
+        maxVol: 50
+        reagents:
+        - ReagentId: Posca
+          Quantity: 50
+  - type: Drink
+  - type: Sprite
+    sprite: Objects/Consumable/Drinks/glass_light_yellow.rsi
+
+- type: entity
+  parent: DrinkGlassBase
   id: DrinkRedMeadGlass
   name: red mead glass
   description: A true Viking's beverage, though its color is strange.
@@ -1492,23 +1509,6 @@
   - type: Drink
   - type: Sprite
     sprite: Objects/Consumable/Drinks/rumglass.rsi
-
-- type: entity
-  parent: DrinkGlassBase
-  id: DrinkSakeGlass
-  name: sake glass
-  description: Wine made from rice, it's sake!
-  components:
-  - type: SolutionContainerManager
-    solutions:
-      drink:
-        maxVol: 50
-        reagents:
-        - ReagentId: Sake
-          Quantity: 50
-  - type: Drink
-  - type: Sprite
-    sprite: Objects/Consumable/Drinks/ginvodkaglass.rsi
 
 - type: entity
   parent: DrinkGlassBase

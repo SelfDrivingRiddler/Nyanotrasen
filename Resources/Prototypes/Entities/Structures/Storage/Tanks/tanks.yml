@@ -5,19 +5,13 @@
   parent: StorageTank
   suffix: Empty
   components:
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 1200
   - type: Sprite
     sprite: Structures/Storage/tanks.rsi
     state: fueltank
   - type: ReagentTank
     tankType: Fuel
-  - type: DamageOnToolInteract
-    tools:
-    - Welding
-    weldingDamage:
-      types:
-        Heat: 10
   - type: Explosive
     explosionType: Default
     totalIntensity: 120 # ~ 5 tile radius
@@ -27,7 +21,7 @@
   parent: WeldingFuelTank
   suffix: Full
   components:
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 1200
   - type: SolutionContainerManager
     solutions:
@@ -43,7 +37,7 @@
   parent: StorageTank
   suffix: Empty
   components:
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 1200
   - type: Sprite
     sprite: Structures/Storage/tanks.rsi
@@ -54,7 +48,7 @@
   id: WaterTankFull
   suffix: Full
   components:
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 1200
   - type: SolutionContainerManager
     solutions:
@@ -76,6 +70,11 @@
         reagents:
         - ReagentId: Water
           Quantity: 500
+  - type: AutoRegenReagent
+    solution: tank
+    reagents:
+      - Water
+    unitsPerSecond: 0.5
 
 - type: entity
   parent: StorageTank

@@ -2,13 +2,11 @@ using System.Threading;
 using Content.Server.DoAfter;
 using Content.Server.Hands.Systems;
 using Content.Server.Hands.Components;
-using Content.Server.MobState;
 using Content.Server.Resist;
-using Content.Server.Speech;
 using Content.Server.Popups;
 using Content.Server.Contests;
 using Content.Server.Climbing;
-using Content.Shared.MobState;
+using Content.Shared.Mobs;
 using Content.Shared.Buckle.Components;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands;
@@ -24,7 +22,7 @@ using Content.Shared.Standing;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Throwing;
 using Content.Shared.Physics.Pull;
-using Robust.Shared.Player;
+using Content.Shared.Mobs.Systems;
 using Robust.Shared.Map.Components;
 
 namespace Content.Server.Carrying
@@ -39,7 +37,6 @@ namespace Content.Server.Carrying
         [Dependency] private readonly SharedPullingSystem _pullingSystem = default!;
         [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
         [Dependency] private readonly EscapeInventorySystem _escapeInventorySystem = default!;
-        [Dependency] private readonly VocalSystem _vocalSystem = default!;
         [Dependency] private readonly PopupSystem _popupSystem = default!;
         [Dependency] private readonly ContestsSystem _contests = default!;
         [Dependency] private readonly MovementSpeedModifierSystem _movementSpeed = default!;
@@ -128,8 +125,6 @@ namespace Content.Server.Carrying
 
             var multiplier = _contests.MassContest(uid, virtItem.BlockingEntity);
             args.ThrowStrength = 5f * multiplier;
-
-            _vocalSystem.TryScream(args.ItemUid);
         }
 
         private void OnParentChanged(EntityUid uid, CarryingComponent component, ref EntParentChangedMessage args)

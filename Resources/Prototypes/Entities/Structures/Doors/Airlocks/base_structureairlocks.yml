@@ -41,6 +41,9 @@
       - FullTileMask
       layer:
       - AirlockLayer
+  - type: LayerChangeOnWeld
+    unweldedLayer: AirlockLayer
+    weldedLayer: WallLayer
   - type: ContainerFill
     containers:
       board: [ DoorElectronics ]
@@ -111,7 +114,7 @@
     mode: NoSprite
   - type: PaintableAirlock
     group: Standard
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 150
   placement:
     mode: SnapgridCenter

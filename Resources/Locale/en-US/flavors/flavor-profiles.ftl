@@ -39,6 +39,7 @@ flavor-base-creamy = creamy
 flavor-base-fizzy = fizzy
 flavor-base-shocking = shocking
 flavor-base-cheap = cheap
+flavor-base-piquant = piquant
 
 # lmao
 flavor-base-terrible = terrible
@@ -133,6 +134,7 @@ flavor-complex-cola = like cola
 flavor-complex-vodka = like fermented grain
 flavor-complex-tequila = like fermented death
 flavor-complex-sake = like sweet, alcoholic rice
+flavor-complex-soju = like bold, alcoholic rice
 flavor-complex-rum = like fermented sugar
 flavor-complex-coffee-liquor = like strong, bitter coffee
 flavor-complex-whiskey = like molasses

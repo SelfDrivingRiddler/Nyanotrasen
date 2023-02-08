@@ -1,6 +1,6 @@
 using Content.Server.Power.Components;
 using Content.Server.Electrocution;
-using Content.Server.Beam;
+using Content.Server.Lightning;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Construction;
 using Content.Server.Coordinates.Helpers;
@@ -9,9 +9,10 @@ using Content.Server.Revenant.EntitySystems;
 using Content.Shared.GameTicking;
 using Content.Shared.Psionics.Glimmer;
 using Content.Shared.Verbs;
+using Content.Shared.StatusEffect;
 using Content.Shared.Damage;
 using Content.Shared.Destructible;
-using Content.Shared.MobState.Components;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Construction.Components;
 using Robust.Shared.Random;
 using Robust.Shared.Physics.Components;
@@ -24,7 +25,7 @@ namespace Content.Server.Psionics.Glimmer
         [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
         [Dependency] private readonly SharedAudioSystem _sharedAudioSystem = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly BeamSystem _beam = default!;
+        [Dependency] private readonly LightningSystem _lightning = default!;
         [Dependency] private readonly ExplosionSystem _explosionSystem = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
         [Dependency] private readonly AnchorableSystem _anchorableSystem = default!;
@@ -212,12 +213,13 @@ namespace Content.Server.Psionics.Glimmer
         public void BeamRandomNearProber(EntityUid prober, int targets, float range = 10f)
         {
             List<EntityUid> targetList = new();
-            foreach (var target in _entityLookupSystem.GetComponentsInRange<MobStateComponent>(Transform(prober).Coordinates, range))
+            foreach (var target in _entityLookupSystem.GetComponentsInRange<StatusEffectsComponent>(Transform(prober).Coordinates, range))
             {
-                targetList.Add(target.Owner);
+                if (target.AllowedEffects.Contains("Electrocution"))
+                    targetList.Add(target.Owner);
             }
 
-            foreach(var reactive in _entityLookupSystem.GetComponentsInRange<MobStateComponent>(Transform(prober).Coordinates, range))
+            foreach(var reactive in _entityLookupSystem.GetComponentsInRange<SharedGlimmerReactiveComponent>(Transform(prober).Coordinates, range))
             {
                 targetList.Add(reactive.Owner);
             }
@@ -265,7 +267,7 @@ namespace Content.Server.Psionics.Glimmer
             }
 
 
-            _beam.TryCreateBeam(prober, target, beamproto);
+            _lightning.ShootLightning(prober, target, beamproto);
             BeamCooldown += 3f;
         }
 
@@ -279,6 +281,7 @@ namespace Content.Server.Psionics.Glimmer
                 _destructibleSystem.DestroyEntity(uid);
                 return;
             }
+
             Transform(uid).Coordinates.SnapToGrid();
             Transform(uid).Anchored = true;
         }

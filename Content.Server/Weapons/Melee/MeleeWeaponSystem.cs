@@ -50,7 +50,7 @@ public sealed class MeleeWeaponSystem : SharedMeleeWeaponSystem
         if (!args.CanInteract || !args.CanAccess || component.HideFromExamine)
             return;
 
-        var getDamage = new MeleeHitEvent(new List<EntityUid>(), args.User, component.Damage);
+        var getDamage = new MeleeHitEvent(new List<EntityUid>(), args.User, component.Damage, false);
         getDamage.IsHit = false;
         RaiseLocalEvent(uid, getDamage);
 
@@ -91,7 +91,7 @@ public sealed class MeleeWeaponSystem : SharedMeleeWeaponSystem
             return;
 
         if (user == null)
-            PopupSystem.PopupEntity(message, uid.Value); 
+            PopupSystem.PopupEntity(message, uid.Value);
         else
             PopupSystem.PopupEntity(message, uid.Value, Filter.PvsExcept(user.Value, entityManager: EntityManager), true);
     }
@@ -251,9 +251,9 @@ public sealed class MeleeWeaponSystem : SharedMeleeWeaponSystem
             return;
 
         var removedSolution = solutionContainer.SplitSolution(comp.TransferAmount * hitBloodstreams.Count);
-        var removedVol = removedSolution.TotalVolume;
+        var removedVol = removedSolution.Volume;
         var solutionToInject = removedSolution.SplitSolution(removedVol * comp.TransferEfficiency);
-        var volPerBloodstream = solutionToInject.TotalVolume * (1 / hitBloodstreams.Count);
+        var volPerBloodstream = solutionToInject.Volume * (1 / hitBloodstreams.Count);
 
         foreach (var bloodstream in hitBloodstreams)
         {

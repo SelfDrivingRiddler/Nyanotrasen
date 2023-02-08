@@ -13,8 +13,15 @@
     damage:
       types:
         Blunt: 7.5
+  - type: MeleeStaminaCost
+    swing: 8
   - type: StaminaDamageOnHit
     damage: 8
+  - type: Wieldable
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Blunt: 4
   - type: Item
     size: 15
   - type: Clothing

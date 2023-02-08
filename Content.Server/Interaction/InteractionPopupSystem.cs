@@ -1,8 +1,10 @@
 using Content.Server.Interaction.Components;
 using Content.Server.Popups;
+using Content.Server.NPC.Components;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
-using Content.Shared.MobState.Components;
+using Content.Shared.Mobs.Components;
+using Content.Shared.Mobs.Systems;
 using Robust.Shared.Audio;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
@@ -58,6 +60,13 @@ public sealed class InteractionPopupSystem : EntitySystem
 
             if (component.InteractFailureSound != null)
                 sfx = component.InteractFailureSound.GetSound();
+
+            if (component.HostileOnFail && HasComp<NPCComponent>(uid))
+            {
+                var targeted = EnsureComp<NPCCombatTargetComponent>(uid);
+                targeted.EngagingEnemies.Add(user);
+            }
+
         }
 
         if (component.MessagePerceivedByOthers != null)

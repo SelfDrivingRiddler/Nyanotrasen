@@ -215,15 +215,6 @@
         amount: 0.2
 
 - type: reagent
-  id: Sake
-  name: reagent-name-sake
-  parent: BaseAlcohol
-  desc: reagent-desc-sake
-  physicalDesc: reagent-physical-desc-strong-smelling
-  flavor: sake
-  color: "#DDDDDD"
-
-- type: reagent
   id: Tequila
   name: reagent-name-tequila
   parent: BaseAlcohol
@@ -317,6 +308,15 @@
   flavor: alcohol
   color: "#00664d"
   spritePath: alliescocktail.rsi
+  #nyano addition below
+  metabolisms:
+    Drink:
+      effects:
+      - !type:SatiateThirst
+        factor: 2
+      - !type:AdjustReagent
+        reagent: Ethanol
+        amount: 0.15
 
 - type: reagent
   id: Aloe
@@ -414,6 +414,15 @@
   flavor: alcohol
   color: "#FF7F3B"
   spritePath: bahama_mama.rsi
+  #nyano addition below
+  metabolisms:
+    Drink:
+      effects:
+      - !type:SatiateThirst
+        factor: 2
+      - !type:AdjustReagent
+        reagent: Ethanol
+        amount: 0.06
 
 - type: reagent
   id: BananaHonk
@@ -807,6 +816,15 @@
   flavor: alcohol
   color: "#664300"
   spritePath: manhattanglass.rsi
+  #nyano addition below
+  metabolisms:
+    Drink:
+      effects:
+      - !type:SatiateThirst
+        factor: 2
+      - !type:AdjustReagent
+        reagent: Ethanol
+        amount: 0.15
 
 - type: reagent
   id: ManhattanProject
@@ -817,6 +835,15 @@
   flavor: alcohol
   color: "#664300"
   spritePath: proj_manhattanglass.rsi
+  #nyano addition below
+  metabolisms:
+    Drink:
+      effects:
+      - !type:SatiateThirst
+        factor: 2
+      - !type:AdjustReagent
+        reagent: Ethanol
+        amount: 0.15
 
 - type: reagent
   id: ManlyDorf
@@ -837,6 +864,14 @@
   flavor: alcohol
   color: "#8CFF8C"
   spritePath: margaritaglass.rsi
+  metabolisms:
+    Drink:
+      effects:
+      - !type:SatiateThirst
+        factor: 2
+      - !type:AdjustReagent
+        reagent: Ethanol
+        amount: 0.16
 
 - type: reagent
   id: Martini
@@ -1010,6 +1045,15 @@
   flavor: alcohol
   color: "#FFFFFF"
   spritePath: snowwhite.rsi
+  #nyano addition below
+  metabolisms:
+    Drink:
+      effects:
+      - !type:SatiateThirst
+        factor: 2
+      - !type:AdjustReagent
+        reagent: Ethanol
+        amount: 0.06
 
 - type: reagent
   id: SuiDream
@@ -1020,6 +1064,15 @@
   flavor: alcohol
   color: "#00A86B"
   spritePath: sdreamglass.rsi
+  #nyano addition below
+  metabolisms:
+    Drink:
+      effects:
+      - !type:SatiateThirst
+        factor: 2
+      - !type:AdjustReagent
+        reagent: Ethanol
+        amount: 0.18
 
 - type: reagent
   id: SyndicateBomb
@@ -1114,7 +1167,7 @@
         factor: 2
       - !type:AdjustReagent
         reagent: Ethanol
-        amount: 0.15
+        amount: 0.20
 
 - type: reagent
   id: WhiskeyCola

@@ -40,7 +40,7 @@
     interfaces:
     - key: enum.StorageUiKey.Key
       type: StorageBoundUserInterface
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 80
 
 - type: entity
@@ -77,7 +77,7 @@
     tags:
       - FullBodyOuter
   - type: GroupExamine
-  - type: ClothingGrantComponent
+  - type: ClothingGrantTag
     tag: HardsuitOn
 
 - type: entity

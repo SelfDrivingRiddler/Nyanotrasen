@@ -62,6 +62,7 @@
   - type: Tag
     tags:
     - GunsDisabled
+  - type: Cuffable
   - type: MeleeWeapon
     hidden: true
     angle: 0
@@ -123,6 +124,7 @@
         Asphyxiation: 2
     stamDamageBonus: 1.7
   - type: MobState
+  - type: MobThresholds
     thresholds:
       0: Alive
       100: Critical
@@ -137,4 +139,4 @@
     animation: WeaponArcFist
     damage:
       types:
-        Brute: 7 # See oni component
+        Blunt: 7 # See oni component

@@ -43,7 +43,7 @@
       density: 1000
   - type: Occluder
   - type: Airtight
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 75
   - type: RadiationBlocker
     resistance: 2
@@ -463,7 +463,7 @@
   - type: Appearance
     visuals:
       - type: ReinforcedWallVisualizer
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 150
   - type: RadiationBlocker
     resistance: 5
@@ -498,7 +498,7 @@
   - type: IconSmooth
     key: walls
     base: riveted
-  - type: StaticPrice
+  - type: DynamicPrice
     price: 150
 
 - type: entity
@@ -591,9 +591,12 @@
   - type: Sprite
     netsync: false
     drawdepth: Walls
-    # TODO: Icon smoothing support
     sprite: Structures/Walls/shuttle_diagonal.rsi
     state: state0
+  - type: IconSmooth
+    mode: Diagonal
+    key: walls
+    base: state
   - type: Icon
     sprite: Structures/Walls/shuttle_diagonal.rsi
     state: state0
